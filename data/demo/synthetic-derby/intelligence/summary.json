@@ -1,0 +1,162 @@
+{
+  "n_players_embedded": 20,
+  "embedding_method": "learned",
+  "roles": {
+    "2": "wide midfielder",
+    "3": "box-to-box midfielder",
+    "4": "box-to-box midfielder",
+    "5": "wide midfielder",
+    "6": "ball-winning midfielder",
+    "7": "wide midfielder",
+    "8": "wide midfielder",
+    "9": "winger",
+    "10": "ball-winning midfielder",
+    "11": "winger",
+    "102": "wide midfielder",
+    "103": "box-to-box midfielder",
+    "104": "box-to-box midfielder",
+    "105": "wide midfielder",
+    "106": "wide midfielder",
+    "107": "pressing forward",
+    "108": "pressing forward",
+    "109": "wide midfielder",
+    "110": "pressing forward",
+    "111": "box-to-box midfielder"
+  },
+  "role_mismatches": [
+    {
+      "entity_id": 2,
+      "team": "home",
+      "nominal_slot": "RB",
+      "nominal_family": "fullback",
+      "discovered_role": "wide midfielder",
+      "role_family": "wide-mid"
+    },
+    {
+      "entity_id": 3,
+      "team": "home",
+      "nominal_slot": "RCB",
+      "nominal_family": "centre-back",
+      "discovered_role": "box-to-box midfielder",
+      "role_family": "central-mid"
+    },
+    {
+      "entity_id": 4,
+      "team": "home",
+      "nominal_slot": "LCB",
+      "nominal_family": "centre-back",
+      "discovered_role": "box-to-box midfielder",
+      "role_family": "central-mid"
+    },
+    {
+      "entity_id": 5,
+      "team": "home",
+      "nominal_slot": "LB",
+      "nominal_family": "fullback",
+      "discovered_role": "wide midfielder",
+      "role_family": "wide-mid"
+    },
+    {
+      "entity_id": 7,
+      "team": "home",
+      "nominal_slot": "RCM",
+      "nominal_family": "central-mid",
+      "discovered_role": "wide midfielder",
+      "role_family": "wide-mid"
+    },
+    {
+      "entity_id": 8,
+      "team": "home",
+      "nominal_slot": "LCM",
+      "nominal_family": "central-mid",
+      "discovered_role": "wide midfielder",
+      "role_family": "wide-mid"
+    },
+    {
+      "entity_id": 10,
+      "team": "home",
+      "nominal_slot": "ST",
+      "nominal_family": "striker",
+      "discovered_role": "ball-winning midfielder",
+      "role_family": "defensive-mid"
+    },
+    {
+      "entity_id": 102,
+      "team": "away",
+      "nominal_slot": "RB",
+      "nominal_family": "fullback",
+      "discovered_role": "wide midfielder",
+      "role_family": "wide-mid"
+    },
+    {
+      "entity_id": 103,
+      "team": "away",
+      "nominal_slot": "RCB",
+      "nominal_family": "centre-back",
+      "discovered_role": "box-to-box midfielder",
+      "role_family": "central-mid"
+    },
+    {
+      "entity_id": 104,
+      "team": "away",
+      "nominal_slot": "LCB",
+      "nominal_family": "centre-back",
+      "discovered_role": "box-to-box midfielder",
+      "role_family": "central-mid"
+    },
+    {
+      "entity_id": 105,
+      "team": "away",
+      "nominal_slot": "LB",
+      "nominal_family": "fullback",
+      "discovered_role": "wide midfielder",
+      "role_family": "wide-mid"
+    },
+    {
+      "entity_id": 107,
+      "team": "away",
+      "nominal_slot": "RCM",
+      "nominal_family": "central-mid",
+      "discovered_role": "pressing forward",
+      "role_family": "striker"
+    },
+    {
+      "entity_id": 108,
+      "team": "away",
+      "nominal_slot": "LCM",
+      "nominal_family": "central-mid",
+      "discovered_role": "pressing forward",
+      "role_family": "striker"
+    },
+    {
+      "entity_id": 111,
+      "team": "away",
+      "nominal_slot": "LST",
+      "nominal_family": "striker",
+      "discovered_role": "box-to-box midfielder",
+      "role_family": "central-mid"
+    }
+  ],
+  "marking": {
+    "home": {
+      "open_play": [
+        "hybrid",
+        0.672
+      ],
+      "set_piece": [
+        null,
+        null
+      ]
+    },
+    "away": {
+      "open_play": [
+        "man-marking",
+        0.814
+      ],
+      "set_piece": [
+        "man-marking",
+        0.818
+      ]
+    }
+  }
+}

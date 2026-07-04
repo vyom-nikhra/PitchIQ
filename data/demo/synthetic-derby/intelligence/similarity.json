@@ -1,0 +1,1806 @@
+{
+  "backend": "faiss",
+  "method": "learned",
+  "neighbors": {
+    "2": [
+      {
+        "entity_id": 102,
+        "similarity": 0.7127,
+        "drivers": {
+          "interaction": 0.001,
+          "involvement": -0.677,
+          "movement": -0.044,
+          "phase": 0.781,
+          "spatial": 0.569
+        }
+      },
+      {
+        "entity_id": 106,
+        "similarity": 0.4699,
+        "drivers": {
+          "interaction": -0.103,
+          "involvement": -0.916,
+          "movement": 0.174,
+          "phase": 0.513,
+          "spatial": 0.547
+        }
+      },
+      {
+        "entity_id": 5,
+        "similarity": 0.3946,
+        "drivers": {
+          "interaction": -0.204,
+          "involvement": 0.906,
+          "movement": 0.194,
+          "phase": -0.246,
+          "spatial": -0.025
+        }
+      },
+      {
+        "entity_id": 109,
+        "similarity": 0.3166,
+        "drivers": {
+          "interaction": 0.924,
+          "involvement": -0.566,
+          "movement": 0.01,
+          "phase": -0.77,
+          "spatial": -0.236
+        }
+      },
+      {
+        "entity_id": 9,
+        "similarity": 0.1799,
+        "drivers": {
+          "interaction": 0.263,
+          "involvement": 0.548,
+          "movement": 0.003,
+          "phase": 0.593,
+          "spatial": 0.503
+        }
+      },
+      {
+        "entity_id": 105,
+        "similarity": 0.1359,
+        "drivers": {
+          "interaction": 0.734,
+          "involvement": -0.601,
+          "movement": 0.001,
+          "phase": -0.673,
+          "spatial": -0.173
+        }
+      },
+      {
+        "entity_id": 7,
+        "similarity": 0.1274,
+        "drivers": {
+          "interaction": 0.555,
+          "involvement": 0.507,
+          "movement": 0.752,
+          "phase": 0.594,
+          "spatial": -0.075
+        }
+      },
+      {
+        "entity_id": 107,
+        "similarity": 0.0689,
+        "drivers": {
+          "interaction": -0.286,
+          "involvement": -0.893,
+          "movement": 0.05,
+          "phase": 0.412,
+          "spatial": 0.103
+        }
+      }
+    ],
+    "3": [
+      {
+        "entity_id": 4,
+        "similarity": 0.9204,
+        "drivers": {
+          "interaction": 0.194,
+          "involvement": 0.989,
+          "movement": 0.963,
+          "phase": 0.748,
+          "spatial": 0.751
+        }
+      },
+      {
+        "entity_id": 111,
+        "similarity": 0.7369,
+        "drivers": {
+          "interaction": 0.208,
+          "involvement": 0.618,
+          "movement": 0.318,
+          "phase": -0.764,
+          "spatial": -0.095
+        }
+      },
+      {
+        "entity_id": 103,
+        "similarity": 0.6156,
+        "drivers": {
+          "interaction": 0.16,
+          "involvement": -0.743,
+          "movement": 0.13,
+          "phase": 0.821,
+          "spatial": 0.662
+        }
+      },
+      {
+        "entity_id": 110,
+        "similarity": 0.6108,
+        "drivers": {
+          "interaction": 0.196,
+          "involvement": 0.618,
+          "movement": 0.953,
+          "phase": -0.562,
+          "spatial": -0.218
+        }
+      },
+      {
+        "entity_id": 104,
+        "similarity": 0.6005,
+        "drivers": {
+          "interaction": 0.176,
+          "involvement": -0.394,
+          "movement": -0.029,
+          "phase": 0.555,
+          "spatial": 0.555
+        }
+      },
+      {
+        "entity_id": 7,
+        "similarity": 0.4602,
+        "drivers": {
+          "interaction": 0.318,
+          "involvement": 0.959,
+          "movement": 0.38,
+          "phase": -0.225,
+          "spatial": 0.63
+        }
+      },
+      {
+        "entity_id": 5,
+        "similarity": 0.3554,
+        "drivers": {
+          "interaction": 0.266,
+          "involvement": 0.292,
+          "movement": -0.67,
+          "phase": 0.083,
+          "spatial": 0.062
+        }
+      },
+      {
+        "entity_id": 10,
+        "similarity": 0.3034,
+        "drivers": {
+          "interaction": -0.419,
+          "involvement": 0.53,
+          "movement": 0.466,
+          "phase": -0.513,
+          "spatial": 0.416
+        }
+      }
+    ],
+    "4": [
+      {
+        "entity_id": 3,
+        "similarity": 0.9204,
+        "drivers": {
+          "interaction": 0.194,
+          "involvement": 0.989,
+          "movement": 0.963,
+          "phase": 0.748,
+          "spatial": 0.751
+        }
+      },
+      {
+        "entity_id": 111,
+        "similarity": 0.8335,
+        "drivers": {
+          "interaction": -0.897,
+          "involvement": 0.704,
+          "movement": 0.482,
+          "phase": -0.717,
+          "spatial": 0.089
+        }
+      },
+      {
+        "entity_id": 110,
+        "similarity": 0.6733,
+        "drivers": {
+          "interaction": -0.893,
+          "involvement": 0.702,
+          "movement": 0.975,
+          "phase": -0.867,
+          "spatial": -0.154
+        }
+      },
+      {
+        "entity_id": 104,
+        "similarity": 0.6176,
+        "drivers": {
+          "interaction": 0.988,
+          "involvement": -0.31,
+          "movement": -0.091,
+          "phase": 0.943,
+          "spatial": 0.66
+        }
+      },
+      {
+        "entity_id": 7,
+        "similarity": 0.5228,
+        "drivers": {
+          "interaction": -0.768,
+          "involvement": 0.978,
+          "movement": 0.535,
+          "phase": -0.374,
+          "spatial": 0.495
+        }
+      },
+      {
+        "entity_id": 103,
+        "similarity": 0.5057,
+        "drivers": {
+          "interaction": 0.975,
+          "involvement": -0.697,
+          "movement": 0.099,
+          "phase": 0.448,
+          "spatial": 0.597
+        }
+      },
+      {
+        "entity_id": 8,
+        "similarity": 0.4798,
+        "drivers": {
+          "interaction": -0.124,
+          "involvement": 0.379,
+          "movement": 0.687,
+          "phase": -0.004,
+          "spatial": 0.187
+        }
+      },
+      {
+        "entity_id": 5,
+        "similarity": 0.461,
+        "drivers": {
+          "interaction": 0.634,
+          "involvement": 0.21,
+          "movement": -0.588,
+          "phase": 0.722,
+          "spatial": 0.28
+        }
+      }
+    ],
+    "5": [
+      {
+        "entity_id": 8,
+        "similarity": 0.5191,
+        "drivers": {
+          "interaction": -0.716,
+          "involvement": 0.761,
+          "movement": -0.092,
+          "phase": 0.57,
+          "spatial": 0.606
+        }
+      },
+      {
+        "entity_id": 104,
+        "similarity": 0.5029,
+        "drivers": {
+          "interaction": 0.513,
+          "involvement": -0.841,
+          "movement": -0.043,
+          "phase": 0.832,
+          "spatial": 0.564
+        }
+      },
+      {
+        "entity_id": 105,
+        "similarity": 0.4627,
+        "drivers": {
+          "interaction": 0.433,
+          "involvement": -0.56,
+          "movement": 0.589,
+          "phase": 0.76,
+          "spatial": 0.287
+        }
+      },
+      {
+        "entity_id": 4,
+        "similarity": 0.461,
+        "drivers": {
+          "interaction": 0.634,
+          "involvement": 0.21,
+          "movement": -0.588,
+          "phase": 0.722,
+          "spatial": 0.28
+        }
+      },
+      {
+        "entity_id": 7,
+        "similarity": 0.4205,
+        "drivers": {
+          "interaction": -0.725,
+          "involvement": 0.304,
+          "movement": -0.412,
+          "phase": -0.291,
+          "spatial": -0.044
+        }
+      },
+      {
+        "entity_id": 2,
+        "similarity": 0.3946,
+        "drivers": {
+          "interaction": -0.204,
+          "involvement": 0.906,
+          "movement": 0.194,
+          "phase": -0.246,
+          "spatial": -0.025
+        }
+      },
+      {
+        "entity_id": 102,
+        "similarity": 0.3941,
+        "drivers": {
+          "interaction": 0.508,
+          "involvement": -0.552,
+          "movement": 0.496,
+          "phase": -0.638,
+          "spatial": -0.439
+        }
+      },
+      {
+        "entity_id": 106,
+        "similarity": 0.3689,
+        "drivers": {
+          "interaction": 0.525,
+          "involvement": -0.811,
+          "movement": 0.607,
+          "phase": -0.611,
+          "spatial": -0.452
+        }
+      }
+    ],
+    "6": [
+      {
+        "entity_id": 10,
+        "similarity": 0.4519,
+        "drivers": {
+          "interaction": 0.585,
+          "involvement": 0.493,
+          "movement": -0.88,
+          "phase": 0.529,
+          "spatial": -0.752
+        }
+      },
+      {
+        "entity_id": 106,
+        "similarity": 0.1142,
+        "drivers": {
+          "interaction": -0.74,
+          "involvement": -0.814,
+          "movement": 0.278,
+          "phase": -0.372,
+          "spatial": 0.531
+        }
+      },
+      {
+        "entity_id": 102,
+        "similarity": 0.096,
+        "drivers": {
+          "interaction": -0.86,
+          "involvement": -0.839,
+          "movement": 0.221,
+          "phase": 0.35,
+          "spatial": 0.528
+        }
+      },
+      {
+        "entity_id": 109,
+        "similarity": 0.0672,
+        "drivers": {
+          "interaction": 0.17,
+          "involvement": -0.795,
+          "movement": 0.426,
+          "phase": -0.356,
+          "spatial": 0.591
+        }
+      },
+      {
+        "entity_id": 103,
+        "similarity": 0.047,
+        "drivers": {
+          "interaction": -0.184,
+          "involvement": -0.872,
+          "movement": 0.056,
+          "phase": 0.285,
+          "spatial": -0.755
+        }
+      },
+      {
+        "entity_id": 2,
+        "similarity": 0.0196,
+        "drivers": {
+          "interaction": -0.038,
+          "involvement": 0.704,
+          "movement": -0.835,
+          "phase": -0.127,
+          "spatial": 0.068
+        }
+      },
+      {
+        "entity_id": 7,
+        "similarity": 0.0183,
+        "drivers": {
+          "interaction": 0.702,
+          "involvement": 0.439,
+          "movement": -0.944,
+          "phase": -0.001,
+          "spatial": -0.889
+        }
+      },
+      {
+        "entity_id": 8,
+        "similarity": -0.0105,
+        "drivers": {
+          "interaction": 0.905,
+          "involvement": 0.81,
+          "movement": -0.647,
+          "phase": 0.033,
+          "spatial": 0.138
+        }
+      }
+    ],
+    "7": [
+      {
+        "entity_id": 8,
+        "similarity": 0.7114,
+        "drivers": {
+          "interaction": 0.644,
+          "involvement": 0.468,
+          "movement": 0.743,
+          "phase": 0.206,
+          "spatial": -0.265
+        }
+      },
+      {
+        "entity_id": 4,
+        "similarity": 0.5228,
+        "drivers": {
+          "interaction": -0.768,
+          "involvement": 0.978,
+          "movement": 0.535,
+          "phase": -0.374,
+          "spatial": 0.495
+        }
+      },
+      {
+        "entity_id": 3,
+        "similarity": 0.4602,
+        "drivers": {
+          "interaction": 0.318,
+          "involvement": 0.959,
+          "movement": 0.38,
+          "phase": -0.225,
+          "spatial": 0.63
+        }
+      },
+      {
+        "entity_id": 5,
+        "similarity": 0.4205,
+        "drivers": {
+          "interaction": -0.725,
+          "involvement": 0.304,
+          "movement": -0.412,
+          "phase": -0.291,
+          "spatial": -0.044
+        }
+      },
+      {
+        "entity_id": 10,
+        "similarity": 0.3344,
+        "drivers": {
+          "interaction": 0.657,
+          "involvement": 0.591,
+          "movement": 0.931,
+          "phase": 0.507,
+          "spatial": 0.864
+        }
+      },
+      {
+        "entity_id": 111,
+        "similarity": 0.3075,
+        "drivers": {
+          "interaction": 0.896,
+          "involvement": 0.69,
+          "movement": 0.99,
+          "phase": -0.235,
+          "spatial": 0.601
+        }
+      },
+      {
+        "entity_id": 102,
+        "similarity": 0.2458,
+        "drivers": {
+          "interaction": -0.768,
+          "involvement": -0.717,
+          "movement": -0.315,
+          "phase": 0.338,
+          "spatial": -0.49
+        }
+      },
+      {
+        "entity_id": 9,
+        "similarity": 0.2399,
+        "drivers": {
+          "interaction": 0.175,
+          "involvement": 0.203,
+          "movement": 0.34,
+          "phase": 0.911,
+          "spatial": 0.35
+        }
+      }
+    ],
+    "8": [
+      {
+        "entity_id": 7,
+        "similarity": 0.7114,
+        "drivers": {
+          "interaction": 0.644,
+          "involvement": 0.468,
+          "movement": 0.743,
+          "phase": 0.206,
+          "spatial": -0.265
+        }
+      },
+      {
+        "entity_id": 5,
+        "similarity": 0.5191,
+        "drivers": {
+          "interaction": -0.716,
+          "involvement": 0.761,
+          "movement": -0.092,
+          "phase": 0.57,
+          "spatial": 0.606
+        }
+      },
+      {
+        "entity_id": 4,
+        "similarity": 0.4798,
+        "drivers": {
+          "interaction": -0.124,
+          "involvement": 0.379,
+          "movement": 0.687,
+          "phase": -0.004,
+          "spatial": 0.187
+        }
+      },
+      {
+        "entity_id": 106,
+        "similarity": 0.4374,
+        "drivers": {
+          "interaction": -0.505,
+          "involvement": -0.822,
+          "movement": -0.424,
+          "phase": -0.844,
+          "spatial": -0.305
+        }
+      },
+      {
+        "entity_id": 105,
+        "similarity": 0.3596,
+        "drivers": {
+          "interaction": -0.476,
+          "involvement": -0.766,
+          "movement": -0.512,
+          "phase": 0.605,
+          "spatial": 0.708
+        }
+      },
+      {
+        "entity_id": 104,
+        "similarity": 0.3036,
+        "drivers": {
+          "interaction": 0.018,
+          "involvement": -0.75,
+          "movement": -0.342,
+          "phase": 0.195,
+          "spatial": 0.125
+        }
+      },
+      {
+        "entity_id": 3,
+        "similarity": 0.292,
+        "drivers": {
+          "interaction": 0.271,
+          "involvement": 0.454,
+          "movement": 0.541,
+          "phase": -0.546,
+          "spatial": -0.395
+        }
+      },
+      {
+        "entity_id": 108,
+        "similarity": 0.2635,
+        "drivers": {
+          "interaction": 0.863,
+          "involvement": -0.857,
+          "movement": 0.163,
+          "phase": 0.583,
+          "spatial": 0.504
+        }
+      }
+    ],
+    "9": [
+      {
+        "entity_id": 11,
+        "similarity": 0.4084,
+        "drivers": {
+          "interaction": 0.407,
+          "involvement": 0.9,
+          "movement": 0.934,
+          "phase": 0.031,
+          "spatial": -0.019
+        }
+      },
+      {
+        "entity_id": 102,
+        "similarity": 0.2413,
+        "drivers": {
+          "interaction": 0.304,
+          "involvement": -0.058,
+          "movement": 0.326,
+          "phase": 0.44,
+          "spatial": 0.31
+        }
+      },
+      {
+        "entity_id": 7,
+        "similarity": 0.2399,
+        "drivers": {
+          "interaction": 0.175,
+          "involvement": 0.203,
+          "movement": 0.34,
+          "phase": 0.911,
+          "spatial": 0.35
+        }
+      },
+      {
+        "entity_id": 103,
+        "similarity": 0.2107,
+        "drivers": {
+          "interaction": -0.723,
+          "involvement": -0.37,
+          "movement": 0.837,
+          "phase": -0.425,
+          "spatial": 0.372
+        }
+      },
+      {
+        "entity_id": 2,
+        "similarity": 0.1799,
+        "drivers": {
+          "interaction": 0.263,
+          "involvement": 0.548,
+          "movement": 0.003,
+          "phase": 0.593,
+          "spatial": 0.503
+        }
+      },
+      {
+        "entity_id": 10,
+        "similarity": 0.1468,
+        "drivers": {
+          "interaction": 0.57,
+          "involvement": 0.867,
+          "movement": 0.6,
+          "phase": 0.47,
+          "spatial": 0.304
+        }
+      },
+      {
+        "entity_id": 106,
+        "similarity": 0.0163,
+        "drivers": {
+          "interaction": 0.018,
+          "involvement": -0.502,
+          "movement": -0.786,
+          "phase": 0.378,
+          "spatial": 0.355
+        }
+      },
+      {
+        "entity_id": 110,
+        "similarity": 0.0122,
+        "drivers": {
+          "interaction": 0.344,
+          "involvement": -0.439,
+          "movement": 0.33,
+          "phase": 0.298,
+          "spatial": 0.333
+        }
+      }
+    ],
+    "10": [
+      {
+        "entity_id": 111,
+        "similarity": 0.5664,
+        "drivers": {
+          "interaction": 0.527,
+          "involvement": -0.12,
+          "movement": 0.891,
+          "phase": 0.411,
+          "spatial": 0.818
+        }
+      },
+      {
+        "entity_id": 103,
+        "similarity": 0.5302,
+        "drivers": {
+          "interaction": -0.608,
+          "involvement": -0.59,
+          "movement": 0.243,
+          "phase": -0.543,
+          "spatial": 0.931
+        }
+      },
+      {
+        "entity_id": 11,
+        "similarity": 0.517,
+        "drivers": {
+          "interaction": -0.464,
+          "involvement": 0.63,
+          "movement": 0.695,
+          "phase": 0.422,
+          "spatial": 0.426
+        }
+      },
+      {
+        "entity_id": 6,
+        "similarity": 0.4519,
+        "drivers": {
+          "interaction": 0.585,
+          "involvement": 0.493,
+          "movement": -0.88,
+          "phase": 0.529,
+          "spatial": -0.752
+        }
+      },
+      {
+        "entity_id": 110,
+        "similarity": 0.4001,
+        "drivers": {
+          "interaction": 0.516,
+          "involvement": -0.138,
+          "movement": 0.381,
+          "phase": 0.477,
+          "spatial": 0.622
+        }
+      },
+      {
+        "entity_id": 4,
+        "similarity": 0.378,
+        "drivers": {
+          "interaction": -0.757,
+          "involvement": 0.502,
+          "movement": 0.552,
+          "phase": -0.661,
+          "spatial": 0.498
+        }
+      },
+      {
+        "entity_id": 7,
+        "similarity": 0.3344,
+        "drivers": {
+          "interaction": 0.657,
+          "involvement": 0.591,
+          "movement": 0.931,
+          "phase": 0.507,
+          "spatial": 0.864
+        }
+      },
+      {
+        "entity_id": 3,
+        "similarity": 0.3034,
+        "drivers": {
+          "interaction": -0.419,
+          "involvement": 0.53,
+          "movement": 0.466,
+          "phase": -0.513,
+          "spatial": 0.416
+        }
+      }
+    ],
+    "11": [
+      {
+        "entity_id": 10,
+        "similarity": 0.517,
+        "drivers": {
+          "interaction": -0.464,
+          "involvement": 0.63,
+          "movement": 0.695,
+          "phase": 0.422,
+          "spatial": 0.426
+        }
+      },
+      {
+        "entity_id": 9,
+        "similarity": 0.4084,
+        "drivers": {
+          "interaction": 0.407,
+          "involvement": 0.9,
+          "movement": 0.934,
+          "phase": 0.031,
+          "spatial": -0.019
+        }
+      },
+      {
+        "entity_id": 111,
+        "similarity": 0.3886,
+        "drivers": {
+          "interaction": -0.428,
+          "involvement": -0.733,
+          "movement": 0.34,
+          "phase": 0.361,
+          "spatial": 0.561
+        }
+      },
+      {
+        "entity_id": 103,
+        "similarity": 0.3672,
+        "drivers": {
+          "interaction": 0.117,
+          "involvement": -0.106,
+          "movement": 0.72,
+          "phase": -0.895,
+          "spatial": 0.282
+        }
+      },
+      {
+        "entity_id": 4,
+        "similarity": 0.2937,
+        "drivers": {
+          "interaction": 0.282,
+          "involvement": -0.337,
+          "movement": 0.549,
+          "phase": -0.184,
+          "spatial": 0.132
+        }
+      },
+      {
+        "entity_id": 109,
+        "similarity": 0.2088,
+        "drivers": {
+          "interaction": -0.093,
+          "involvement": -0.683,
+          "movement": -0.887,
+          "phase": 0.467,
+          "spatial": 0.195
+        }
+      },
+      {
+        "entity_id": 110,
+        "similarity": 0.2075,
+        "drivers": {
+          "interaction": -0.44,
+          "involvement": -0.749,
+          "movement": 0.469,
+          "phase": -0.035,
+          "spatial": 0.082
+        }
+      },
+      {
+        "entity_id": 7,
+        "similarity": 0.1917,
+        "drivers": {
+          "interaction": -0.648,
+          "involvement": -0.208,
+          "movement": 0.421,
+          "phase": 0.221,
+          "spatial": 0.353
+        }
+      }
+    ],
+    "102": [
+      {
+        "entity_id": 106,
+        "similarity": 0.8127,
+        "drivers": {
+          "interaction": 0.949,
+          "involvement": 0.828,
+          "movement": -0.268,
+          "phase": 0.582,
+          "spatial": 0.9
+        }
+      },
+      {
+        "entity_id": 2,
+        "similarity": 0.7127,
+        "drivers": {
+          "interaction": 0.001,
+          "involvement": -0.677,
+          "movement": -0.044,
+          "phase": 0.781,
+          "spatial": 0.569
+        }
+      },
+      {
+        "entity_id": 109,
+        "similarity": 0.7048,
+        "drivers": {
+          "interaction": -0.275,
+          "involvement": 0.466,
+          "movement": -0.208,
+          "phase": -0.868,
+          "spatial": 0.336
+        }
+      },
+      {
+        "entity_id": 105,
+        "similarity": 0.5507,
+        "drivers": {
+          "interaction": 0.462,
+          "involvement": 0.915,
+          "movement": 0.71,
+          "phase": -0.675,
+          "spatial": 0.432
+        }
+      },
+      {
+        "entity_id": 5,
+        "similarity": 0.3941,
+        "drivers": {
+          "interaction": 0.508,
+          "involvement": -0.552,
+          "movement": 0.496,
+          "phase": -0.638,
+          "spatial": -0.439
+        }
+      },
+      {
+        "entity_id": 7,
+        "similarity": 0.2458,
+        "drivers": {
+          "interaction": -0.768,
+          "involvement": -0.717,
+          "movement": -0.315,
+          "phase": 0.338,
+          "spatial": -0.49
+        }
+      },
+      {
+        "entity_id": 9,
+        "similarity": 0.2413,
+        "drivers": {
+          "interaction": 0.304,
+          "involvement": -0.058,
+          "movement": 0.326,
+          "phase": 0.44,
+          "spatial": 0.31
+        }
+      },
+      {
+        "entity_id": 8,
+        "similarity": 0.1818,
+        "drivers": {
+          "interaction": -0.678,
+          "involvement": -0.64,
+          "movement": -0.064,
+          "phase": -0.744,
+          "spatial": -0.292
+        }
+      }
+    ],
+    "103": [
+      {
+        "entity_id": 3,
+        "similarity": 0.6156,
+        "drivers": {
+          "interaction": 0.16,
+          "involvement": -0.743,
+          "movement": 0.13,
+          "phase": 0.821,
+          "spatial": 0.662
+        }
+      },
+      {
+        "entity_id": 111,
+        "similarity": 0.5916,
+        "drivers": {
+          "interaction": -0.886,
+          "involvement": -0.284,
+          "movement": -0.06,
+          "phase": -0.304,
+          "spatial": 0.585
+        }
+      },
+      {
+        "entity_id": 10,
+        "similarity": 0.5302,
+        "drivers": {
+          "interaction": -0.608,
+          "involvement": -0.59,
+          "movement": 0.243,
+          "phase": -0.543,
+          "spatial": 0.931
+        }
+      },
+      {
+        "entity_id": 4,
+        "similarity": 0.5057,
+        "drivers": {
+          "interaction": 0.975,
+          "involvement": -0.697,
+          "movement": 0.099,
+          "phase": 0.448,
+          "spatial": 0.597
+        }
+      },
+      {
+        "entity_id": 11,
+        "similarity": 0.3672,
+        "drivers": {
+          "interaction": 0.117,
+          "involvement": -0.106,
+          "movement": 0.72,
+          "phase": -0.895,
+          "spatial": 0.282
+        }
+      },
+      {
+        "entity_id": 110,
+        "similarity": 0.2537,
+        "drivers": {
+          "interaction": -0.884,
+          "involvement": -0.277,
+          "movement": 0.106,
+          "phase": -0.072,
+          "spatial": 0.394
+        }
+      },
+      {
+        "entity_id": 104,
+        "similarity": 0.2188,
+        "drivers": {
+          "interaction": 0.997,
+          "involvement": 0.869,
+          "movement": 0.9,
+          "phase": 0.338,
+          "spatial": 0.308
+        }
+      },
+      {
+        "entity_id": 9,
+        "similarity": 0.2107,
+        "drivers": {
+          "interaction": -0.723,
+          "involvement": -0.37,
+          "movement": 0.837,
+          "phase": -0.425,
+          "spatial": 0.372
+        }
+      }
+    ],
+    "104": [
+      {
+        "entity_id": 108,
+        "similarity": 0.6573,
+        "drivers": {
+          "interaction": 0.39,
+          "involvement": 0.751,
+          "movement": -0.407,
+          "phase": 0.094,
+          "spatial": 0.382
+        }
+      },
+      {
+        "entity_id": 4,
+        "similarity": 0.6176,
+        "drivers": {
+          "interaction": 0.988,
+          "involvement": -0.31,
+          "movement": -0.091,
+          "phase": 0.943,
+          "spatial": 0.66
+        }
+      },
+      {
+        "entity_id": 3,
+        "similarity": 0.6005,
+        "drivers": {
+          "interaction": 0.176,
+          "involvement": -0.394,
+          "movement": -0.029,
+          "phase": 0.555,
+          "spatial": 0.555
+        }
+      },
+      {
+        "entity_id": 111,
+        "similarity": 0.5296,
+        "drivers": {
+          "interaction": -0.884,
+          "involvement": 0.033,
+          "movement": -0.284,
+          "phase": -0.461,
+          "spatial": 0.029
+        }
+      },
+      {
+        "entity_id": 5,
+        "similarity": 0.5029,
+        "drivers": {
+          "interaction": 0.513,
+          "involvement": -0.841,
+          "movement": -0.043,
+          "phase": 0.832,
+          "spatial": 0.564
+        }
+      },
+      {
+        "entity_id": 110,
+        "similarity": 0.4815,
+        "drivers": {
+          "interaction": -0.88,
+          "involvement": 0.042,
+          "movement": -0.058,
+          "phase": -0.747,
+          "spatial": -0.317
+        }
+      },
+      {
+        "entity_id": 105,
+        "similarity": 0.418,
+        "drivers": {
+          "interaction": -0.151,
+          "involvement": 0.844,
+          "movement": 0.704,
+          "phase": 0.78,
+          "spatial": -0.312
+        }
+      },
+      {
+        "entity_id": 107,
+        "similarity": 0.4126,
+        "drivers": {
+          "interaction": 0.667,
+          "involvement": 0.701,
+          "movement": 0.263,
+          "phase": -0.674,
+          "spatial": -0.711
+        }
+      }
+    ],
+    "105": [
+      {
+        "entity_id": 109,
+        "similarity": 0.7945,
+        "drivers": {
+          "interaction": 0.581,
+          "involvement": 0.7,
+          "movement": 0.353,
+          "phase": 0.693,
+          "spatial": 0.936
+        }
+      },
+      {
+        "entity_id": 106,
+        "similarity": 0.6627,
+        "drivers": {
+          "interaction": 0.292,
+          "involvement": 0.72,
+          "movement": 0.317,
+          "phase": -0.81,
+          "spatial": 0.359
+        }
+      },
+      {
+        "entity_id": 102,
+        "similarity": 0.5507,
+        "drivers": {
+          "interaction": 0.462,
+          "involvement": 0.915,
+          "movement": 0.71,
+          "phase": -0.675,
+          "spatial": 0.432
+        }
+      },
+      {
+        "entity_id": 5,
+        "similarity": 0.4627,
+        "drivers": {
+          "interaction": 0.433,
+          "involvement": -0.56,
+          "movement": 0.589,
+          "phase": 0.76,
+          "spatial": 0.287
+        }
+      },
+      {
+        "entity_id": 111,
+        "similarity": 0.4481,
+        "drivers": {
+          "interaction": 0.112,
+          "involvement": 0.025,
+          "movement": -0.433,
+          "phase": 0.023,
+          "spatial": -0.309
+        }
+      },
+      {
+        "entity_id": 104,
+        "similarity": 0.418,
+        "drivers": {
+          "interaction": -0.151,
+          "involvement": 0.844,
+          "movement": 0.704,
+          "phase": 0.78,
+          "spatial": -0.312
+        }
+      },
+      {
+        "entity_id": 108,
+        "similarity": 0.414,
+        "drivers": {
+          "interaction": -0.758,
+          "involvement": 0.566,
+          "movement": 0.078,
+          "phase": 0.653,
+          "spatial": 0.416
+        }
+      },
+      {
+        "entity_id": 110,
+        "similarity": 0.3898,
+        "drivers": {
+          "interaction": 0.088,
+          "involvement": 0.027,
+          "movement": -0.504,
+          "phase": -0.409,
+          "spatial": -0.197
+        }
+      }
+    ],
+    "106": [
+      {
+        "entity_id": 109,
+        "similarity": 0.8315,
+        "drivers": {
+          "interaction": -0.434,
+          "involvement": 0.6,
+          "movement": 0.982,
+          "phase": -0.313,
+          "spatial": 0.417
+        }
+      },
+      {
+        "entity_id": 102,
+        "similarity": 0.8127,
+        "drivers": {
+          "interaction": 0.949,
+          "involvement": 0.828,
+          "movement": -0.268,
+          "phase": 0.582,
+          "spatial": 0.9
+        }
+      },
+      {
+        "entity_id": 105,
+        "similarity": 0.6627,
+        "drivers": {
+          "interaction": 0.292,
+          "involvement": 0.72,
+          "movement": 0.317,
+          "phase": -0.81,
+          "spatial": 0.359
+        }
+      },
+      {
+        "entity_id": 2,
+        "similarity": 0.4699,
+        "drivers": {
+          "interaction": -0.103,
+          "involvement": -0.916,
+          "movement": 0.174,
+          "phase": 0.513,
+          "spatial": 0.547
+        }
+      },
+      {
+        "entity_id": 8,
+        "similarity": 0.4374,
+        "drivers": {
+          "interaction": -0.505,
+          "involvement": -0.822,
+          "movement": -0.424,
+          "phase": -0.844,
+          "spatial": -0.305
+        }
+      },
+      {
+        "entity_id": 5,
+        "similarity": 0.3689,
+        "drivers": {
+          "interaction": 0.525,
+          "involvement": -0.811,
+          "movement": 0.607,
+          "phase": -0.611,
+          "spatial": -0.452
+        }
+      },
+      {
+        "entity_id": 7,
+        "similarity": 0.2356,
+        "drivers": {
+          "interaction": -0.846,
+          "involvement": -0.759,
+          "movement": -0.34,
+          "phase": 0.03,
+          "spatial": -0.59
+        }
+      },
+      {
+        "entity_id": 108,
+        "similarity": 0.1991,
+        "drivers": {
+          "interaction": -0.224,
+          "involvement": 0.917,
+          "movement": 0.603,
+          "phase": -0.601,
+          "spatial": 0.042
+        }
+      }
+    ],
+    "107": [
+      {
+        "entity_id": 110,
+        "similarity": 0.5834,
+        "drivers": {
+          "interaction": -0.415,
+          "involvement": 0.072,
+          "movement": -0.435,
+          "phase": 0.673,
+          "spatial": 0.469
+        }
+      },
+      {
+        "entity_id": 108,
+        "similarity": 0.5573,
+        "drivers": {
+          "interaction": 0.946,
+          "involvement": 0.964,
+          "movement": 0.408,
+          "phase": -0.309,
+          "spatial": -0.315
+        }
+      },
+      {
+        "entity_id": 104,
+        "similarity": 0.4126,
+        "drivers": {
+          "interaction": 0.667,
+          "involvement": 0.701,
+          "movement": 0.263,
+          "phase": -0.674,
+          "spatial": -0.711
+        }
+      },
+      {
+        "entity_id": 111,
+        "similarity": 0.3349,
+        "drivers": {
+          "interaction": -0.422,
+          "involvement": 0.051,
+          "movement": -0.374,
+          "phase": 0.305,
+          "spatial": -0.031
+        }
+      },
+      {
+        "entity_id": 109,
+        "similarity": 0.2392,
+        "drivers": {
+          "interaction": -0.4,
+          "involvement": 0.732,
+          "movement": 0.729,
+          "phase": -0.4,
+          "spatial": 0.104
+        }
+      },
+      {
+        "entity_id": 4,
+        "similarity": 0.2084,
+        "drivers": {
+          "interaction": 0.545,
+          "involvement": -0.453,
+          "movement": -0.489,
+          "phase": -0.571,
+          "spatial": -0.387
+        }
+      },
+      {
+        "entity_id": 105,
+        "similarity": 0.2044,
+        "drivers": {
+          "interaction": -0.653,
+          "involvement": 0.56,
+          "movement": 0.749,
+          "phase": -0.81,
+          "spatial": 0.058
+        }
+      },
+      {
+        "entity_id": 3,
+        "similarity": 0.1981,
+        "drivers": {
+          "interaction": 0.1,
+          "involvement": -0.494,
+          "movement": -0.548,
+          "phase": -0.056,
+          "spatial": -0.268
+        }
+      }
+    ],
+    "108": [
+      {
+        "entity_id": 104,
+        "similarity": 0.6573,
+        "drivers": {
+          "interaction": 0.39,
+          "involvement": 0.751,
+          "movement": -0.407,
+          "phase": 0.094,
+          "spatial": 0.382
+        }
+      },
+      {
+        "entity_id": 107,
+        "similarity": 0.5573,
+        "drivers": {
+          "interaction": 0.946,
+          "involvement": 0.964,
+          "movement": 0.408,
+          "phase": -0.309,
+          "spatial": -0.315
+        }
+      },
+      {
+        "entity_id": 105,
+        "similarity": 0.414,
+        "drivers": {
+          "interaction": -0.758,
+          "involvement": 0.566,
+          "movement": 0.078,
+          "phase": 0.653,
+          "spatial": 0.416
+        }
+      },
+      {
+        "entity_id": 111,
+        "similarity": 0.35,
+        "drivers": {
+          "interaction": -0.154,
+          "involvement": -0.097,
+          "movement": 0.558,
+          "phase": 0.649,
+          "spatial": -0.335
+        }
+      },
+      {
+        "entity_id": 109,
+        "similarity": 0.2853,
+        "drivers": {
+          "interaction": -0.24,
+          "involvement": 0.588,
+          "movement": 0.454,
+          "phase": 0.532,
+          "spatial": 0.492
+        }
+      },
+      {
+        "entity_id": 110,
+        "similarity": 0.2755,
+        "drivers": {
+          "interaction": -0.147,
+          "involvement": -0.065,
+          "movement": -0.35,
+          "phase": 0.365,
+          "spatial": -0.391
+        }
+      },
+      {
+        "entity_id": 8,
+        "similarity": 0.2635,
+        "drivers": {
+          "interaction": 0.863,
+          "involvement": -0.857,
+          "movement": 0.163,
+          "phase": 0.583,
+          "spatial": 0.504
+        }
+      },
+      {
+        "entity_id": 4,
+        "similarity": 0.208,
+        "drivers": {
+          "interaction": 0.244,
+          "involvement": -0.481,
+          "movement": -0.229,
+          "phase": -0.202,
+          "spatial": -0.094
+        }
+      }
+    ],
+    "109": [
+      {
+        "entity_id": 106,
+        "similarity": 0.8315,
+        "drivers": {
+          "interaction": -0.434,
+          "involvement": 0.6,
+          "movement": 0.982,
+          "phase": -0.313,
+          "spatial": 0.417
+        }
+      },
+      {
+        "entity_id": 105,
+        "similarity": 0.7945,
+        "drivers": {
+          "interaction": 0.581,
+          "involvement": 0.7,
+          "movement": 0.353,
+          "phase": 0.693,
+          "spatial": 0.936
+        }
+      },
+      {
+        "entity_id": 102,
+        "similarity": 0.7048,
+        "drivers": {
+          "interaction": -0.275,
+          "involvement": 0.466,
+          "movement": -0.208,
+          "phase": -0.868,
+          "spatial": 0.336
+        }
+      },
+      {
+        "entity_id": 110,
+        "similarity": 0.3188,
+        "drivers": {
+          "interaction": 0.708,
+          "involvement": 0.561,
+          "movement": -0.581,
+          "phase": 0.035,
+          "spatial": -0.101
+        }
+      },
+      {
+        "entity_id": 2,
+        "similarity": 0.3166,
+        "drivers": {
+          "interaction": 0.924,
+          "involvement": -0.566,
+          "movement": 0.01,
+          "phase": -0.77,
+          "spatial": -0.236
+        }
+      },
+      {
+        "entity_id": 108,
+        "similarity": 0.2853,
+        "drivers": {
+          "interaction": -0.24,
+          "involvement": 0.588,
+          "movement": 0.454,
+          "phase": 0.532,
+          "spatial": 0.492
+        }
+      },
+      {
+        "entity_id": 5,
+        "similarity": 0.2601,
+        "drivers": {
+          "interaction": -0.405,
+          "involvement": -0.737,
+          "movement": 0.62,
+          "phase": 0.622,
+          "spatial": 0.242
+        }
+      },
+      {
+        "entity_id": 111,
+        "similarity": 0.2471,
+        "drivers": {
+          "interaction": 0.734,
+          "involvement": 0.562,
+          "movement": -0.453,
+          "phase": 0.492,
+          "spatial": -0.209
+        }
+      }
+    ],
+    "110": [
+      {
+        "entity_id": 111,
+        "similarity": 0.8676,
+        "drivers": {
+          "interaction": 0.999,
+          "involvement": 0.998,
+          "movement": 0.312,
+          "phase": 0.863,
+          "spatial": 0.803
+        }
+      },
+      {
+        "entity_id": 4,
+        "similarity": 0.6733,
+        "drivers": {
+          "interaction": -0.893,
+          "involvement": 0.702,
+          "movement": 0.975,
+          "phase": -0.867,
+          "spatial": -0.154
+        }
+      },
+      {
+        "entity_id": 3,
+        "similarity": 0.6108,
+        "drivers": {
+          "interaction": 0.196,
+          "involvement": 0.618,
+          "movement": 0.953,
+          "phase": -0.562,
+          "spatial": -0.218
+        }
+      },
+      {
+        "entity_id": 107,
+        "similarity": 0.5834,
+        "drivers": {
+          "interaction": -0.415,
+          "involvement": 0.072,
+          "movement": -0.435,
+          "phase": 0.673,
+          "spatial": 0.469
+        }
+      },
+      {
+        "entity_id": 104,
+        "similarity": 0.4815,
+        "drivers": {
+          "interaction": -0.88,
+          "involvement": 0.042,
+          "movement": -0.058,
+          "phase": -0.747,
+          "spatial": -0.317
+        }
+      },
+      {
+        "entity_id": 10,
+        "similarity": 0.4001,
+        "drivers": {
+          "interaction": 0.516,
+          "involvement": -0.138,
+          "movement": 0.381,
+          "phase": 0.477,
+          "spatial": 0.622
+        }
+      },
+      {
+        "entity_id": 105,
+        "similarity": 0.3898,
+        "drivers": {
+          "interaction": 0.088,
+          "involvement": 0.027,
+          "movement": -0.504,
+          "phase": -0.409,
+          "spatial": -0.197
+        }
+      },
+      {
+        "entity_id": 109,
+        "similarity": 0.3188,
+        "drivers": {
+          "interaction": 0.708,
+          "involvement": 0.561,
+          "movement": -0.581,
+          "phase": 0.035,
+          "spatial": -0.101
+        }
+      }
+    ],
+    "111": [
+      {
+        "entity_id": 110,
+        "similarity": 0.8676,
+        "drivers": {
+          "interaction": 0.999,
+          "involvement": 0.998,
+          "movement": 0.312,
+          "phase": 0.863,
+          "spatial": 0.803
+        }
+      },
+      {
+        "entity_id": 4,
+        "similarity": 0.8335,
+        "drivers": {
+          "interaction": -0.897,
+          "involvement": 0.704,
+          "movement": 0.482,
+          "phase": -0.717,
+          "spatial": 0.089
+        }
+      },
+      {
+        "entity_id": 3,
+        "similarity": 0.7369,
+        "drivers": {
+          "interaction": 0.208,
+          "involvement": 0.618,
+          "movement": 0.318,
+          "phase": -0.764,
+          "spatial": -0.095
+        }
+      },
+      {
+        "entity_id": 103,
+        "similarity": 0.5916,
+        "drivers": {
+          "interaction": -0.886,
+          "involvement": -0.284,
+          "movement": -0.06,
+          "phase": -0.304,
+          "spatial": 0.585
+        }
+      },
+      {
+        "entity_id": 10,
+        "similarity": 0.5664,
+        "drivers": {
+          "interaction": 0.527,
+          "involvement": -0.12,
+          "movement": 0.891,
+          "phase": 0.411,
+          "spatial": 0.818
+        }
+      },
+      {
+        "entity_id": 104,
+        "similarity": 0.5296,
+        "drivers": {
+          "interaction": -0.884,
+          "involvement": 0.033,
+          "movement": -0.284,
+          "phase": -0.461,
+          "spatial": 0.029
+        }
+      },
+      {
+        "entity_id": 105,
+        "similarity": 0.4481,
+        "drivers": {
+          "interaction": 0.112,
+          "involvement": 0.025,
+          "movement": -0.433,
+          "phase": 0.023,
+          "spatial": -0.309
+        }
+      },
+      {
+        "entity_id": 11,
+        "similarity": 0.3886,
+        "drivers": {
+          "interaction": -0.428,
+          "involvement": -0.733,
+          "movement": 0.34,
+          "phase": 0.361,
+          "spatial": 0.561
+        }
+      }
+    ]
+  }
+}

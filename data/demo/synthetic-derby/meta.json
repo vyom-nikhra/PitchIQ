@@ -1,0 +1,61 @@
+{
+  "fps": 25.0,
+  "n_frames": 6000,
+  "pitch_length": 105.0,
+  "pitch_width": 68.0,
+  "team_names": {
+    "home": "Crimson City",
+    "away": "Azure United"
+  },
+  "kit_colors": {
+    "home": "#d62728",
+    "away": "#1f77b4"
+  },
+  "attack_direction": {
+    "home": 1,
+    "away": -1
+  },
+  "source": "synthetic-simulator",
+  "extras": {
+    "halftime_frame": 3000,
+    "profiles": {
+      "home": {
+        "name": "Crimson City",
+        "formation": "4-3-3",
+        "kit_color": "#d62728",
+        "line_height": 0.72,
+        "width": 0.62,
+        "press_intensity": 0.8,
+        "marking_scheme": "zonal",
+        "possession_style": "short",
+        "player_styles": null
+      },
+      "away": {
+        "name": "Azure United",
+        "formation": "4-4-2",
+        "kit_color": "#1f77b4",
+        "line_height": 0.3,
+        "width": 0.4,
+        "press_intensity": 0.25,
+        "marking_scheme": "man",
+        "possession_style": "direct",
+        "player_styles": null
+      }
+    },
+    "marking_gt": {
+      "away": {
+        "102": 11,
+        "103": 8,
+        "104": 10,
+        "105": 9,
+        "106": 5,
+        "107": 6,
+        "108": 7,
+        "109": 2,
+        "110": 4,
+        "111": 3
+      }
+    },
+    "variant": "ground-truth"
+  }
+}

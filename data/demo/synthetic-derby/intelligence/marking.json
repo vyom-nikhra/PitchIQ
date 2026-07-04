@@ -1,0 +1,396 @@
+{
+  "home": {
+    "open_play": {
+      "team_man_score": 0.672,
+      "scheme": "hybrid",
+      "per_defender": {
+        "2": {
+          "assignment_stability": 1.0,
+          "position_coupling": 0.951,
+          "spatial_spread_m": 27.08,
+          "man_score": 0.963
+        },
+        "3": {
+          "assignment_stability": 0.929,
+          "position_coupling": 0.828,
+          "spatial_spread_m": 25.2,
+          "man_score": 0.809
+        },
+        "4": {
+          "assignment_stability": 0.986,
+          "position_coupling": 0.831,
+          "spatial_spread_m": 25.04,
+          "man_score": 0.861
+        },
+        "5": {
+          "assignment_stability": 1.0,
+          "position_coupling": 0.951,
+          "spatial_spread_m": 26.63,
+          "man_score": 0.963
+        },
+        "6": {
+          "assignment_stability": 0.92,
+          "position_coupling": -0.365,
+          "spatial_spread_m": 13.9,
+          "man_score": 0.23
+        },
+        "7": {
+          "assignment_stability": 0.803,
+          "position_coupling": 0.123,
+          "spatial_spread_m": 20.91,
+          "man_score": 0.274
+        },
+        "8": {
+          "assignment_stability": 0.946,
+          "position_coupling": 0.182,
+          "spatial_spread_m": 14.7,
+          "man_score": 0.366
+        },
+        "9": {
+          "assignment_stability": 0.866,
+          "position_coupling": 0.944,
+          "spatial_spread_m": 23.96,
+          "man_score": 0.829
+        },
+        "10": {
+          "assignment_stability": 0.8,
+          "position_coupling": 0.657,
+          "spatial_spread_m": 21.64,
+          "man_score": 0.594
+        },
+        "11": {
+          "assignment_stability": 0.875,
+          "position_coupling": 0.934,
+          "spatial_spread_m": 23.84,
+          "man_score": 0.832
+        }
+      },
+      "pairs": [
+        {
+          "defender_id": 2,
+          "attacker_id": 109,
+          "share": 1.0,
+          "avg_dist_m": 9.5
+        },
+        {
+          "defender_id": 5,
+          "attacker_id": 106,
+          "share": 1.0,
+          "avg_dist_m": 11.13
+        },
+        {
+          "defender_id": 4,
+          "attacker_id": 110,
+          "share": 0.986,
+          "avg_dist_m": 5.55
+        },
+        {
+          "defender_id": 8,
+          "attacker_id": 107,
+          "share": 0.87,
+          "avg_dist_m": 4.25
+        },
+        {
+          "defender_id": 3,
+          "attacker_id": 111,
+          "share": 0.864,
+          "avg_dist_m": 5.38
+        },
+        {
+          "defender_id": 11,
+          "attacker_id": 102,
+          "share": 0.793,
+          "avg_dist_m": 9.76
+        },
+        {
+          "defender_id": 6,
+          "attacker_id": 108,
+          "share": 0.787,
+          "avg_dist_m": 7.58
+        },
+        {
+          "defender_id": 9,
+          "attacker_id": 105,
+          "share": 0.694,
+          "avg_dist_m": 8.77
+        },
+        {
+          "defender_id": 7,
+          "attacker_id": 108,
+          "share": 0.468,
+          "avg_dist_m": 6.0
+        },
+        {
+          "defender_id": 10,
+          "attacker_id": 103,
+          "share": 0.468,
+          "avg_dist_m": 7.16
+        }
+      ],
+      "n_samples": 85
+    },
+    "set_piece": {
+      "note": "not enough defensive samples"
+    }
+  },
+  "away": {
+    "open_play": {
+      "team_man_score": 0.814,
+      "scheme": "man-marking",
+      "per_defender": {
+        "102": {
+          "assignment_stability": 1.0,
+          "position_coupling": 0.967,
+          "spatial_spread_m": 27.31,
+          "man_score": 0.975
+        },
+        "103": {
+          "assignment_stability": 0.963,
+          "position_coupling": 0.73,
+          "spatial_spread_m": 17.11,
+          "man_score": 0.768
+        },
+        "104": {
+          "assignment_stability": 0.974,
+          "position_coupling": 0.808,
+          "spatial_spread_m": 17.31,
+          "man_score": 0.834
+        },
+        "105": {
+          "assignment_stability": 1.0,
+          "position_coupling": 0.968,
+          "spatial_spread_m": 27.59,
+          "man_score": 0.976
+        },
+        "106": {
+          "assignment_stability": 0.993,
+          "position_coupling": 0.974,
+          "spatial_spread_m": 25.26,
+          "man_score": 0.973
+        },
+        "107": {
+          "assignment_stability": 0.966,
+          "position_coupling": -0.233,
+          "spatial_spread_m": 9.47,
+          "man_score": 0.242
+        },
+        "108": {
+          "assignment_stability": 0.929,
+          "position_coupling": 0.422,
+          "spatial_spread_m": 10.13,
+          "man_score": 0.526
+        },
+        "109": {
+          "assignment_stability": 0.979,
+          "position_coupling": 0.965,
+          "spatial_spread_m": 24.5,
+          "man_score": 0.954
+        },
+        "110": {
+          "assignment_stability": 0.98,
+          "position_coupling": 0.966,
+          "spatial_spread_m": 23.7,
+          "man_score": 0.954
+        },
+        "111": {
+          "assignment_stability": 0.966,
+          "position_coupling": 0.958,
+          "spatial_spread_m": 24.41,
+          "man_score": 0.936
+        }
+      },
+      "pairs": [
+        {
+          "defender_id": 102,
+          "attacker_id": 11,
+          "share": 1.0,
+          "avg_dist_m": 6.16
+        },
+        {
+          "defender_id": 105,
+          "attacker_id": 9,
+          "share": 1.0,
+          "avg_dist_m": 5.81
+        },
+        {
+          "defender_id": 106,
+          "attacker_id": 5,
+          "share": 0.993,
+          "avg_dist_m": 6.74
+        },
+        {
+          "defender_id": 110,
+          "attacker_id": 4,
+          "share": 0.98,
+          "avg_dist_m": 3.94
+        },
+        {
+          "defender_id": 109,
+          "attacker_id": 2,
+          "share": 0.973,
+          "avg_dist_m": 5.94
+        },
+        {
+          "defender_id": 111,
+          "attacker_id": 3,
+          "share": 0.967,
+          "avg_dist_m": 4.34
+        },
+        {
+          "defender_id": 104,
+          "attacker_id": 10,
+          "share": 0.574,
+          "avg_dist_m": 5.23
+        },
+        {
+          "defender_id": 108,
+          "attacker_id": 7,
+          "share": 0.553,
+          "avg_dist_m": 4.22
+        },
+        {
+          "defender_id": 103,
+          "attacker_id": 8,
+          "share": 0.532,
+          "avg_dist_m": 3.49
+        },
+        {
+          "defender_id": 107,
+          "attacker_id": 6,
+          "share": 0.5,
+          "avg_dist_m": 2.22
+        }
+      ],
+      "n_samples": 150
+    },
+    "set_piece": {
+      "team_man_score": 0.818,
+      "scheme": "man-marking",
+      "per_defender": {
+        "102": {
+          "assignment_stability": 1.0,
+          "position_coupling": 0.967,
+          "spatial_spread_m": 27.31,
+          "man_score": 0.975
+        },
+        "103": {
+          "assignment_stability": 1.0,
+          "position_coupling": 0.73,
+          "spatial_spread_m": 17.11,
+          "man_score": 0.798
+        },
+        "104": {
+          "assignment_stability": 0.875,
+          "position_coupling": 0.808,
+          "spatial_spread_m": 17.31,
+          "man_score": 0.749
+        },
+        "105": {
+          "assignment_stability": 1.0,
+          "position_coupling": 0.968,
+          "spatial_spread_m": 27.59,
+          "man_score": 0.976
+        },
+        "106": {
+          "assignment_stability": 1.0,
+          "position_coupling": 0.974,
+          "spatial_spread_m": 25.26,
+          "man_score": 0.98
+        },
+        "107": {
+          "assignment_stability": 0.875,
+          "position_coupling": -0.233,
+          "spatial_spread_m": 9.47,
+          "man_score": 0.219
+        },
+        "108": {
+          "assignment_stability": 1.0,
+          "position_coupling": 0.422,
+          "spatial_spread_m": 10.13,
+          "man_score": 0.566
+        },
+        "109": {
+          "assignment_stability": 1.0,
+          "position_coupling": 0.965,
+          "spatial_spread_m": 24.5,
+          "man_score": 0.974
+        },
+        "110": {
+          "assignment_stability": 1.0,
+          "position_coupling": 0.966,
+          "spatial_spread_m": 23.7,
+          "man_score": 0.974
+        },
+        "111": {
+          "assignment_stability": 1.0,
+          "position_coupling": 0.958,
+          "spatial_spread_m": 24.41,
+          "man_score": 0.969
+        }
+      },
+      "pairs": [
+        {
+          "defender_id": 102,
+          "attacker_id": 11,
+          "share": 1.0,
+          "avg_dist_m": 5.7
+        },
+        {
+          "defender_id": 103,
+          "attacker_id": 8,
+          "share": 1.0,
+          "avg_dist_m": 3.2
+        },
+        {
+          "defender_id": 105,
+          "attacker_id": 9,
+          "share": 1.0,
+          "avg_dist_m": 5.83
+        },
+        {
+          "defender_id": 106,
+          "attacker_id": 5,
+          "share": 1.0,
+          "avg_dist_m": 5.37
+        },
+        {
+          "defender_id": 108,
+          "attacker_id": 7,
+          "share": 1.0,
+          "avg_dist_m": 4.36
+        },
+        {
+          "defender_id": 109,
+          "attacker_id": 2,
+          "share": 1.0,
+          "avg_dist_m": 5.09
+        },
+        {
+          "defender_id": 110,
+          "attacker_id": 4,
+          "share": 1.0,
+          "avg_dist_m": 1.96
+        },
+        {
+          "defender_id": 111,
+          "attacker_id": 3,
+          "share": 1.0,
+          "avg_dist_m": 1.16
+        },
+        {
+          "defender_id": 104,
+          "attacker_id": 10,
+          "share": 0.833,
+          "avg_dist_m": 4.38
+        },
+        {
+          "defender_id": 107,
+          "attacker_id": 6,
+          "share": 0.833,
+          "avg_dist_m": 1.64
+        }
+      ],
+      "n_samples": 6
+    }
+  }
+}

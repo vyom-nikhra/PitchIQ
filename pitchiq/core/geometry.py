@@ -99,7 +99,8 @@ def point_line_distance(pts: np.ndarray, a: np.ndarray, b: np.ndarray) -> np.nda
     n = np.hypot(*d)
     if n < 1e-12:
         return np.linalg.norm(pts - a, axis=1)
-    return np.abs(np.cross(np.broadcast_to(d, pts.shape), pts - a)) / n
+    rel = pts - a
+    return np.abs(d[0] * rel[:, 1] - d[1] * rel[:, 0]) / n
 
 
 def angle_diff_deg(a: float, b: float) -> float:

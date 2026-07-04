@@ -40,7 +40,7 @@ class SceneCutDetector:
         is_cut = False
         if self._prev_hist is not None:
             d = cv2.compareHist(self._prev_hist, hist, cv2.HISTCMP_BHATTACHARYYA)
-            is_cut = d > self.threshold
+            is_cut = bool(d > self.threshold)
         self._prev_hist = hist
         return is_cut
 

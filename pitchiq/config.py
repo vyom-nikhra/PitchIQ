@@ -197,8 +197,8 @@ class MarkingConfig(BaseModel):
 
 
 class LLMConfig(BaseModel):
-    provider: Literal["auto", "anthropic", "none"] = "auto"
-    model: str = "claude-sonnet-5"
+    provider: Literal["auto", "gemini", "anthropic", "none"] = "auto"
+    model: str = "auto"  # 'auto' = provider default (gemini-flash-latest / claude-sonnet-5)
     max_tokens: int = 3000
     temperature: float = 0.2
 

@@ -145,8 +145,8 @@ marking:
 
 report:
   llm:
-    provider: auto        # auto | anthropic | none  (none = deterministic template)
-    model: claude-sonnet-5
+    provider: auto        # auto | gemini | anthropic | none (none = template)
+    model: auto           # provider default (gemini-flash-latest / claude-sonnet-5)
     max_tokens: 3000
     temperature: 0.2
 

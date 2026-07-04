@@ -1,0 +1,162 @@
+# PitchIQ default configuration.
+# Every pipeline component reads its parameters from this tree; any file passed
+# via --config is deep-merged over these defaults.
+
+pitch:
+  length_m: 105.0
+  width_m: 68.0
+
+video:
+  target_fps: 25.0        # processing fps (frames are strided to approximate this); null = native
+  max_frames: null        # hard cap for quick experiments; null = whole clip
+
+detection:
+  backend: auto           # auto | yolo | rtdetr | blob
+  weights: null           # path to football fine-tuned weights (players/GK/ref/ball)
+  model: yolo11n.pt       # base model when no fine-tuned weights are given
+  conf_threshold: 0.30
+  imgsz: 1280
+  device: auto            # auto | cpu | cuda:0
+  coco_fallback: true     # map COCO person/sports-ball when no football weights exist
+  ball:
+    roi_inference: true   # second high-res pass around last known ball position
+    roi_size: 640
+    conf_threshold: 0.15
+    max_gap_interpolate: 25   # frames of missing ball bridged by interpolation
+
+tracking:
+  high_thresh: 0.5        # ByteTrack first-stage detection score
+  low_thresh: 0.10        # second-stage (low-score) detections
+  new_track_thresh: 0.60
+  match_thresh: 0.80      # max cost (1-IoU blended) for first association
+  second_match_thresh: 0.50
+  unconfirmed_match_thresh: 0.70
+  max_lost: 30            # frames a lost track is kept alive
+  min_track_len: 5        # shorter tracks are dropped from the table
+  appearance:
+    enabled: true
+    weight: 0.30          # appearance share of the association cost
+    backend: auto         # auto | osnet | colorhist
+  camera_motion_compensation: true
+
+teams:
+  method: kmeans_lab      # kmeans_lab | embed
+  torso_top: 0.12         # jersey crop as fractions of the bbox
+  torso_bottom: 0.52
+  torso_inset: 0.22
+  min_samples_per_track: 3
+  gk_by_position: true    # positional heuristic when detector has no GK class
+
+jersey:
+  enabled: true
+  backend: auto           # auto | easyocr | none
+  min_conf: 0.55
+  min_votes: 2            # confident reads required to label a track
+  min_height_px: 40       # skip crops too small to read
+
+calibration:
+  method: auto            # auto | lines | keypoints | manual
+  keypoint_weights: null  # optional learned pitch-keypoint model
+  every_n_frames: 3       # full re-estimation cadence; flow propagation in between
+  max_reproj_error_px: 25.0
+  min_line_score: 0.25    # reject hypotheses whose projected template misses the white mask
+  scene_cut_threshold: 0.45   # HSV histogram Bhattacharyya distance
+  propagate_with_flow: true
+  smoothing:
+    enabled: true
+    alpha: 0.5            # EMA on projected control points (per estimation step)
+
+possession:
+  control_radius_m: 2.0
+  hysteresis_frames: 6
+  dead_ball_speed_mps: 0.5
+
+kinematics:
+  smooth_window_s: 0.5
+  max_speed_mps: 11.0
+  sprint_speed_mps: 7.0
+  hi_speed_mps: 5.5
+  min_sprint_duration_s: 0.7
+
+heatmaps:
+  nx: 52
+  ny: 34
+  sigma_cells: 1.5
+
+formations:
+  window_s: 20.0
+  min_window_players: 9
+
+pitch_control:
+  grid_nx: 52
+  grid_ny: 34
+  reaction_time_s: 0.7
+  max_speed_mps: 7.8
+  kappa: 0.45             # softness of the control logistic (seconds)
+
+passes:
+  min_pass_dist_m: 3.0
+  max_pass_time_s: 4.0
+  min_carry_dist_m: 5.0
+
+xt:
+  grid_nx: 16
+  grid_ny: 12
+  n_iterations: 60
+  grid_path: null         # optional precomputed xT grid (JSON); null = fit from events
+
+pressing:
+  press_radius_m: 4.0
+  closing_speed_mps: 0.5
+  ppda_zone_frac: 0.60    # PPDA counted in opponent's build-up 60% of the pitch
+  intense_press_dist_m: 2.5
+
+phases:
+  dead_ball_speed_mps: 0.3
+  dead_ball_secs: 1.5
+  transition_window_s: 5.0
+  third_boundaries_m: [35.0, 70.0]
+  high_block_x_m: 65.0
+  low_block_x_m: 40.0
+
+embeddings:
+  heatmap_nx: 24
+  heatmap_ny: 16
+  pca_dim: 16
+  learned:
+    enabled: auto         # auto: used when torch + weights exist, else handcrafted only
+    weights: null
+    dim: 64
+
+roles:
+  n_clusters: auto        # auto = silhouette scan over 4..9
+  min_minutes: 1.0
+
+similarity:
+  backend: auto           # auto | faiss | sklearn
+  top_k: 8
+
+marking:
+  window_s: 4.0
+  step_s: 1.0
+  max_pair_dist_m: 15.0
+  stability_threshold: 0.60
+  min_defensive_frames: 50
+
+report:
+  llm:
+    provider: auto        # auto | anthropic | none  (none = deterministic template)
+    model: claude-sonnet-5
+    max_tokens: 3000
+    temperature: 0.2
+
+app:
+  artifacts_root: data/jobs
+  demo_root: data/demo
+  api_url: http://localhost:8000
+  radar_fps: 12.5         # radar data is resampled to this rate for the browser
+
+simulator:
+  fps: 25.0
+  half_minutes: 2.0
+  seed: 7

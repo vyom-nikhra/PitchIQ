@@ -1,0 +1,40 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.eggs/
+build/
+dist/
+.venv/
+venv/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+
+# Data & artifacts (demo artifacts under data/demo ARE committed; jobs are not)
+data/jobs/
+data/raw/
+data/downloads/
+*.pt
+*.pth
+*.onnx
+weights/
+
+# Large media not part of the bundled demo
+*.mkv
+*.avi
+
+# Experiment tracking
+wandb/
+runs/
+
+# OS / editor
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+
+# Env
+.env

@@ -68,16 +68,26 @@ class IntelligencePipeline:
                        vectors=emb.vectors, ids=np.array(emb.ids),
                        scalars=emb.scalar_matrix)
 
-        tick(0.5, "role discovery")
-        roles = discover_roles(emb, features, self.cfg.roles)
-        roles["nominal_vs_actual"] = nominal_vs_actual(roles, formation_windows)
-        store.save_json(store.intelligence_path("roles.json"), roles)
+        if len(emb.ids) == 0:
+            log.warning("no players met the minutes threshold — skipping "
+                        "roles/similarity (clip too short)")
+            store.save_json(store.intelligence_path("roles.json"),
+                            {"players": {}, "clusters": [],
+                             "note": "clip too short for style profiling"})
+            store.save_json(store.intelligence_path("similarity.json"),
+                            {"backend": "none", "neighbors": {}})
+            roles = {"players": {}, "nominal_vs_actual": []}
+        else:
+            tick(0.5, "role discovery")
+            roles = discover_roles(emb, features, self.cfg.roles)
+            roles["nominal_vs_actual"] = nominal_vs_actual(roles, formation_windows)
+            store.save_json(store.intelligence_path("roles.json"), roles)
 
-        tick(0.65, "similar-player search")
-        sim = SimilarityIndex(emb, self.cfg.similarity)
-        similarity = {"backend": sim.backend, "method": emb.method,
-                      "neighbors": sim.all_neighbors()}
-        store.save_json(store.intelligence_path("similarity.json"), similarity)
+            tick(0.65, "similar-player search")
+            sim = SimilarityIndex(emb, self.cfg.similarity)
+            similarity = {"backend": sim.backend, "method": emb.method,
+                          "neighbors": sim.all_neighbors()}
+            store.save_json(store.intelligence_path("similarity.json"), similarity)
 
         tick(0.8, "marking analysis")
         team_of = team_of_entities(df)

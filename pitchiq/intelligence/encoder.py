@@ -111,7 +111,7 @@ def train_style_encoder(pair_sets: list[tuple[np.ndarray, np.ndarray]],
             opt.zero_grad()
             loss.backward()
             opt.step()
-            ep_loss += float(loss)
+            ep_loss += float(loss.detach())
         losses.append(ep_loss)
     model.eval()
     out_path = Path(out_path)

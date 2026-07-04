@@ -51,6 +51,10 @@ def robust_scale(X: np.ndarray) -> np.ndarray:
 def compute_handcrafted(features: dict[int, PlayerFeatures],
                         cfg: EmbeddingsConfig) -> EmbeddingResult:
     ids = sorted(features)
+    if not ids:  # clip too short for any player to qualify
+        return EmbeddingResult(ids=[], vectors=np.zeros((0, 1), dtype=np.float32),
+                               method="handcrafted", feature_names=[],
+                               scalar_matrix=np.zeros((0, 0)), group_slices={})
     flat0, names = features[ids[0]].flat()
     scalars = np.zeros((len(ids), len(names)))
     heatmaps = []

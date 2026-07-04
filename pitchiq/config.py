@@ -95,7 +95,7 @@ class SmoothingConfig(BaseModel):
 class CalibrationConfig(BaseModel):
     method: Literal["auto", "lines", "keypoints", "manual"] = "auto"
     keypoint_weights: Optional[str] = None
-    every_n_frames: int = 3
+    every_n_frames: int = 2
     max_reproj_error_px: float = 25.0
     min_line_score: float = 0.25
     scene_cut_threshold: float = 0.45

@@ -57,7 +57,7 @@ jersey:
 calibration:
   method: auto            # auto | lines | keypoints | manual
   keypoint_weights: null  # optional learned pitch-keypoint model
-  every_n_frames: 3       # full re-estimation cadence; flow propagation in between
+  every_n_frames: 2       # full re-estimation cadence; flow propagation in between
   max_reproj_error_px: 25.0
   min_line_score: 0.25    # reject hypotheses whose projected template misses the white mask
   scene_cut_threshold: 0.45   # HSV histogram Bhattacharyya distance

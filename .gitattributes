@@ -1,3 +1,18 @@
+# Normalise to LF in the repo; keep working tree as checked out.
+* text=auto
+*.py text eol=lf
+*.md text eol=lf
+*.yaml text eol=lf
+*.yml text eol=lf
+*.toml text eol=lf
+*.sh text eol=lf
+*.json text eol=lf
+
+# Binary artifacts
+*.mp4 binary
+*.pt binary
+*.parquet binary
+*.npz binary
 *.mp4 filter=lfs diff=lfs merge=lfs -text
 *.parquet filter=lfs diff=lfs merge=lfs -text
 *.npz filter=lfs diff=lfs merge=lfs -text

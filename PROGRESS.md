@@ -1,57 +1,53 @@
 # PROGRESS
 
-Running status of every PitchIQ component.
-
-Legend: ✅ fully functional · 🟡 functional with documented fallback/limitation · 🔧 built, not yet validated · ⬜ not started
+Component truth table. Legend: ✅ fully functional · 🟡 functional with documented fallback/limitation · 🔧 provided, needs user resources · ⬜ open
 
 ## Phase 0 — Foundations ✅
-- ✅ Scaffolding, pydantic+YAML config system, config-hash cache invalidation
-- ✅ Core domain models (pitch w/ 33 keypoints, tracking-table schema + parquet IO, MatchMeta, ArtifactStore)
-- 🟡 Data loaders — Metrica / StatsBomb / SoccerNet / Roboflow parsers wired; downloads need network/keys/NDA (not bundled)
-- 🟡 Detection — YOLOv11 & RT-DETR behind one interface (torch CPU + ultralytics installed); no football fine-tune yet → COCO person/sports-ball fallback; colour-blob fallback works on synthetic renders without torch
-- ✅ Tracking — self-contained ByteTrack + appearance hooks + camera-motion compensation; MOTA/IDF1/ID-switch metrics
-- ✅ Team assignment (LAB+hue clustering, GK/referee heuristics, kit colours)
-- 🟡 Jersey OCR — easyocr backend + track-level voting; easyocr not installed in dev env → numbers null
+- ✅ Config system (pydantic + YAML deep-merge, cache-invalidating config hash)
+- ✅ Core models: pitch (33 keypoints), tracking-table schema + parquet IO, MatchMeta, ArtifactStore, .env secret loader (keys never in code/commits)
+- 🟡 Data loaders: Metrica / StatsBomb / SoccerNet / Roboflow — wired with legal guardrails; downloads on demand (`scripts/download_data.py`)
+- 🟡 Detection: YOLOv11 + RT-DETR behind one interface; COCO fallback (GK/ref via heuristics) until `scripts/train_detector.py` is run; blob fallback for synthetic/no-torch
+- ✅ Tracking: self-contained ByteTrack + appearance + camera-motion compensation; native MOTA/IDF1
+- ✅ Team assignment (kit clustering + GK/ref heuristics + separability score)
+- 🟡 Jersey OCR: easyocr backend + track voting (easyocr optional install)
 
-## Phase 1 — Homography + tracking table ✅
-- ✅ Line extraction → orientation families; order-preserving template assignment + DLT/RANSAC
-- ✅ Conic calibration: ellipse RANSAC (AMS), circle∩halfway + tangent-point constructions (fixes centre-view degeneracy), penalty-arc pole/polar
-- ✅ Bidirectional mask scoring + degeneracy gates (corner-quad area/simplicity, multi-point scale) — this fixed catastrophic wrong-side acceptance
-- ✅ Chamfer refinement (polish-only, never promotes)
-- ✅ Temporal: scene cuts, point-space smoothing w/ mirror canonicalisation, flow propagation, incumbent-vs-fresh evidence comparison
-- ✅ Manual calibration API
-- ✅ Synthetic ground truth: agent simulator (formations, pressing, man/zonal marking, halves) + broadcast renderer (exact GT homographies & boxes)
-- **Measured on rendered broadcast: direct estimates 0.25 m mean; overall median 0.72 m; full pipeline (detect+track+calibrate) median 1.28 m**
-- 🟡 Box-only views (penalty arc + one line family) underdetermined for direct solve → bounded flow-drift (worst chunks 3–5 m); learned keypoint model is the upgrade path (net + training script provided, no weights)
+## Phase 1 — Homography + tracking table ✅ (the crux)
+- ✅ Line + conic calibration (component RANSAC, circle-tangency & arc pole/polar constructions), bidirectional scoring, degeneracy gates, chamfer refinement (polish-only), scene cuts, mirror canonicalisation, flow propagation, incumbent-vs-fresh comparison
+- ✅ Manual calibration API; 🔧 learned keypoint model (net + local-GPU training script; NDA data → weights not bundled)
+- ✅ Synthetic GT harness: agent simulator + 3D-camera broadcast renderer (exact GT homographies/boxes)
+- **Measured: 0.25 m direct / 0.72 m median all-frames / 1.28 m full pipeline**
+- 🟡 Box-only views ride flow propagation (bounded drift; keypoint model is the fix)
 
-## Phase 2 — Core analytics ✅ (53 tests green)
-- ✅ Kinematics (Savitzky-Golay, sprints, HI distance) · possession w/ hysteresis (matches GT share 0.647 vs 0.65)
-- ✅ Heatmaps + third occupation · formation detection via Hungarian template match (recovers sim formations exactly, in/out-possession morphs)
-- ✅ Voronoi (mirror-clipped) + velocity-aware pitch control · line height/compactness · field tilt
+## Phase 2 — Core analytics ✅
+Kinematics · possession (0.647 vs 0.650 GT) · heatmaps/territory · formations via Hungarian templates (exact recovery + morphs) · Voronoi + velocity-aware pitch control · line height/compactness · field tilt
 
-## Phase 3 — Intelligence 🔧 (built end-to-end; validation partially done)
-- ✅ Player-style features (spatial/movement/involvement/interaction/phase-conditioned, attacking-frame heatmaps)
-- ✅ Handcrafted embeddings (robust scaling + PCA, group slices for attribution)
-- 🔧 Learned contrastive encoder (SimCLR NT-Xent over 3-channel phase heatmaps) — code + training path done, **no trained weights yet**; auto-falls back to handcrafted
-- ✅ Role discovery (silhouette-k KMeans + interpretive naming) — clusters behaviourally coherent on sim; scripted "pressing midfielder" correctly flagged as role/slot mismatch
-- ✅ Similar-player search (FAISS w/ sklearn fallback + per-group attribution) — finds cross-team positional analogues
-- 🟡 Marking analysis — **who-marks-whom pairs recover 10/10 vs sim ground truth**; man-vs-zonal *scores* did not separate with velocity correlation; rewritten to residual-position coupling (dense, centroid-removed) — **re-validation pending** (next step)
+## Phase 3 — Intelligence ✅
+- ✅ Style features (phase-conditioned) · handcrafted embeddings (robust scale + PCA + group attribution)
+- ✅ **Learned contrastive encoder trained** (160 sim pairs, NT-Xent) — demo uses it; FAISS index active
+- ✅ Role discovery + naming + nominal-vs-actual flags (scripted archetypes recovered)
+- ✅ Similar-player search w/ per-group "why" (cross-team analogues found)
+- ✅ Marking: Hungarian timeline, stability, residual-position coupling, GK exclusion — **pairs 10/10 vs GT; man 0.81 vs press-zonal 0.67**
 
-## Phase 4 — Advanced analytics + report (analytics half done in Phase 2 batch)
-- ✅ Pass detection (recall 0.93 vs sim GT) · pass networks + centralities · line-breaking passes
-- ✅ xT (value iteration w/ distance-decay forward prior + completion damping) · PPDA/pressing · counter-attacks · phase segmentation
-- ⬜ LLM analyst report (grounded) + Q&A — template fallback planned; Anthropic API path needs key
-- ⬜ Report validation harness
+## Phase 4 — Advanced analytics + report ✅
+- ✅ Pass detection (R 0.93 vs GT) · pass networks + centralities · line-breaking passes · xT (damped value iteration + attribution) · pressing/PPDA · counters · phase segmentation
+- ✅ Grounded report: **Gemini primary (live-verified)**, Anthropic optional, deterministic template fallback; metrics appendix; grounded Q&A w/ retrieval fallback
 
-## Phase 5 — Web app + deployment ⬜
-- ⬜ FastAPI async jobs · Streamlit 5-tab dashboard · video-synced radar (HTML/canvas component)
-- ⬜ Annotated video + radar renderers (viz module)
-- ⬜ Bundled pre-computed demo match · Docker/compose · README + architecture docs · validation report
+## Phase 5 — Web app + deployment ✅
+- ✅ FastAPI (async jobs, artifact serving, Q&A endpoint) · Streamlit 5-tab dashboard — **all tabs verified rendering in a live browser session**
+- ✅ Video-synced tactical radar (canvas + embedded positions; standalone fallback)
+- ✅ Bundled GT demo match (learned embeddings, Gemini report, preview media)
+- 🔄 CV-variant demo (full perception on rendered video) — building in background
+- ✅ Dockerfile (single container, no baked secrets) + compose + HF Spaces config
+- ✅ README + docs (architecture / calibration / limitations / data+NDA / deployment / training)
+- ⬜ validation.md regeneration via `scripts/validate_synthetic.py` (queued behind CV build)
 
-## Phase 6 — Stretch ⬜
-- Team-style fingerprint · off-ball run valuation · RT-DETR vs YOLO benchmark harness · detector fine-tune on Roboflow data
+## Phase 6 — Stretch
+- ✅ RT-DETR vs YOLO benchmark harness (`train_detector.py --benchmark`)
+- 🔧 Detector fine-tune (Roboflow key ready; local RTX 3050 or Kaggle)
+- 🔧 Pitch-keypoint training (SoccerNet download + local GPU)
+- ⬜ Team-style fingerprint · off-ball run valuation · jersey OCR end-to-end demo
 
-## Environment notes
-- Windows, Python 3.13 venv `.venv`; core+app+ml+torch(CPU)+ultralytics installed; easyocr NOT installed
-- OpenCV 5.0: `fitEllipse` rejects non-contiguous arrays — all subsample sites use `ascontiguousarray`
-- Known open items: marking-score re-validation; transition-phase share runs high (rule-based simplification, documented)
+## Operational notes
+- Secrets in `.env` (gitignored; `.env.example` template); NDA data paths hard-blocked in git; keys should be rotated post-project
+- Known gotchas: OpenCV 5 `fitEllipse` needs contiguous arrays; PowerShell pipes CRLF-mangle native-command stdin (don't trust `check-ignore --stdin` there)
+- Git history rewritten pre-publish to drop accidentally-tracked heavy media (repo was never pushed)

@@ -22,6 +22,19 @@ data/downloads/
 *.onnx
 weights/
 
+# NDA-RESTRICTED DATA — SoccerNet content must NEVER be committed or
+# redistributed in any form (videos, annotations, JSONs, crops, file lists).
+data/soccernet/
+**/soccernet_data/
+*.SoccerNet*
+
+# Secrets — never commit keys
+.env
+.env.*
+!.env.example
+*.key
+secrets/
+
 # Large media not part of the bundled demo
 *.mkv
 *.avi

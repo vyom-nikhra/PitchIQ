@@ -26,13 +26,19 @@ by impact.
    ball 0.63). The COCO-person fallback (GK/referee via colour+position
    heuristics) and the synthetic-only blob detector remain as graceful
    degradation when no weights are supplied.
-4. **Team assignment** assumes two dominant kit colours. The chroma-first
-   signature keeps balanced clusters even on 576p footage (measured 0.89
-   cluster balance on RMA-vs-Man City where the earlier lightness-heavy
-   signature collapsed to ~0.10). Similar-tone kits (white vs sky-blue at
-   low resolution) still yield only marginal separability (~1.7, surfaced in
-   meta) so individual track labels can be noisy; higher resolution or an
-   embedding-based team model would sharpen it.
+4. **Team assignment by kit colour has a real failure mode: near-identical
+   kits at low resolution.** The signature is whitened before K-Means (a
+   principled fix that removed a total collapse where one raw dimension
+   hijacked the split), and it works well when kits differ in hue. But on the
+   bundled real test (Real Madrid **white** vs Man City **sky-blue**, 1024×576,
+   ~20 px torso crops), the two shirts are nearly indistinguishable after
+   grass/skin contamination — clustering lumps most of both teams together
+   (~13 vs 1 per frame) and the separability score (~1.7, **surfaced in
+   `meta.extras`**) correctly flags the result as low-confidence rather than
+   asserting false precision. This is a known-hard case even for commercial
+   systems; the real fixes are higher resolution, a learned appearance
+   (re-ID) team embedder, or jersey-number-anchored identities — all future
+   work. Kits with distinct hues (the common case) cluster reliably.
 5. **Tracking through congestion** (corners, goalmouths): ByteTrack +
    appearance recovers most occlusions, but long same-kit overlaps still
    cause ID switches; jersey OCR (when enabled) re-anchors identities only

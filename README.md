@@ -91,6 +91,31 @@ pole/polar) that break the centre-view degeneracy, bidirectional mask
 scoring, degeneracy gates, chamfer refinement, and flow-bridged temporal
 smoothing. Full story: [docs/calibration.md](docs/calibration.md).
 
+## On real broadcast footage
+
+Synthetic ground truth proves the maths; real footage proves the system. The
+full trained stack — **YOLOv11 fine-tuned** on football (player mAP50 0.99,
+GK 0.96, referee 0.98, ball 0.63) + the **SoccerNet-trained pitch-keypoint
+model** + tracking + team clustering — was run end-to-end on a 50-second
+Champions League segment (Real Madrid vs Man City, 1024×576):
+
+| Component | Real-footage result |
+|---|---|
+| Detection | ~19 players + GK + referee + ball per frame, native classes |
+| **Calibration** | keypoint model solves the panning camera (464 keyframes + flow); on the same box-camera frames, **line-only calibration anchored just 14** |
+| Tracking | persistent IDs across the segment, projected onto a live radar |
+| Team colour | separability surfaced in metadata; **fails on this fixture** — RMA-white vs City-sky-blue are near-identical at 576p (documented) |
+
+The **pitch-keypoint model is the enabling piece**: on real box-camera frames
+where line/conic calibration correctly refuses (too few markings), it
+localises 17–21 semantic keypoints and solves a plausible homography — turning
+a raw broadcast pan into real-pitch coordinates for the radar. Trained locally
+on a consumer GPU ([docs/training.md](docs/training.md)); it declines on the
+synthetic renderer (a different visual domain) and the pipeline falls back to
+line/conic there. Honest gaps — team colour on near-identical kits, ball
+tracking, jersey OCR at low resolution — are catalogued in
+[docs/limitations.md](docs/limitations.md).
+
 ## Repository tour
 
 - [docs/architecture.md](docs/architecture.md) — layers, artifacts, module map

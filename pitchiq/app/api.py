@@ -35,8 +35,12 @@ log = logging.getLogger(__name__)
 load_env()
 
 cfg = load_config()
-JOBS_ROOT = Path(cfg.app.artifacts_root)
-DEMO_ROOT = Path(cfg.app.demo_root)
+# anchor to repo root, not launch cwd (see the same note in app/ui.py)
+from pitchiq.config import REPO_ROOT
+
+_root = lambda p: Path(p) if Path(p).is_absolute() else (REPO_ROOT / p)  # noqa: E731
+JOBS_ROOT = _root(cfg.app.artifacts_root)
+DEMO_ROOT = _root(cfg.app.demo_root)
 JOBS_ROOT.mkdir(parents=True, exist_ok=True)
 
 app = FastAPI(title="PitchIQ API", version="0.1.0")

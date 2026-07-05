@@ -42,8 +42,20 @@ UPLOAD_MAX_FRAMES = int(_env_cap) if _env_cap else (400 if ON_SPACE else None)
 HAS_TRAINED_DETECTOR = CFG.detection.weights and Path(CFG.detection.weights).exists()
 HAS_KEYPOINTS = bool(CFG.calibration.keypoint_weights) and Path(
     CFG.calibration.keypoint_weights or "").exists()
-JOBS_ROOT = Path(CFG.app.artifacts_root)
-DEMO_ROOT = Path(CFG.app.demo_root)
+# Anchor data paths to the repo root, not the launch cwd: the artifact roots
+# are relative in config, and Streamlit's working directory is not guaranteed
+# to be the repo root (it isn't under some launchers), which would silently
+# hide processed jobs.
+from pitchiq.config import REPO_ROOT
+
+
+def _anchor(p: str) -> Path:
+    path = Path(p)
+    return path if path.is_absolute() else (REPO_ROOT / path)
+
+
+JOBS_ROOT = _anchor(CFG.app.artifacts_root)
+DEMO_ROOT = _anchor(CFG.app.demo_root)
 JOBS_ROOT.mkdir(parents=True, exist_ok=True)
 
 
@@ -133,6 +145,8 @@ st.sidebar.caption("Tactical intelligence from broadcast video")
 matches = list_matches()
 ready = [m for m in matches if m["status"].get("state") in ("done", "unknown")
          and ArtifactStore(m["dir"]).has_tracking()]
+# newest result first so a freshly processed clip is selected by default
+ready.sort(key=lambda m: m["dir"].stat().st_mtime, reverse=True)
 processing = [m for m in matches if m["status"].get("state") in ("queued", "running")]
 
 if processing:

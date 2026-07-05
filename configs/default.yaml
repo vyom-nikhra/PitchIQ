@@ -46,6 +46,8 @@ teams:
   torso_inset: 0.22
   min_samples_per_track: 3
   gk_by_position: true    # positional heuristic when detector has no GK class
+  min_torso_height_px: 22 # skip crops too small for a reliable kit signature
+  min_non_grass_px: 40    # min non-grass pixels required in a torso crop
 
 jersey:
   enabled: true

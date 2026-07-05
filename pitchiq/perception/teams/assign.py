@@ -40,7 +40,8 @@ def torso_crop(frame_bgr: np.ndarray, bbox: np.ndarray, cfg: TeamsConfig) -> np.
     """Jersey region of a person bbox (fractions from config)."""
     x1, y1, x2, y2 = [int(round(v)) for v in bbox]
     w, h = x2 - x1, y2 - y1
-    if w < 6 or h < 12:
+    min_h = getattr(cfg, "min_torso_height_px", 12)
+    if w < 6 or h < min_h:
         return None
     cx1 = x1 + int(cfg.torso_inset * w)
     cx2 = x2 - int(cfg.torso_inset * w)
@@ -54,20 +55,34 @@ def torso_crop(frame_bgr: np.ndarray, bbox: np.ndarray, cfg: TeamsConfig) -> np.
     return frame_bgr[cy1:cy2, cx1:cx2]
 
 
-def kit_signature(crop_bgr: np.ndarray) -> np.ndarray | None:
-    """11-dim colour signature: [0.5*L, a, b] grass-free means + 8-bin hue hist."""
+def kit_signature(crop_bgr: np.ndarray, min_non_grass_px: int = 40) -> np.ndarray | None:
+    """Chroma-first colour signature for K-Means team clustering.
+
+    The discriminating signal between kits lives in the LAB *chroma* channels
+    (a*, b*), not lightness: e.g. a white kit sits near neutral b* while a
+    sky-blue kit has b* well below 128. L* mostly carries shadow/exposure
+    variation across the pitch, so it is heavily down-weighted. a*/b* are
+    centred on 128 (their neutral point) and amplified, and an 8-bin hue
+    histogram over the non-grass torso pixels adds a saturation-robust cue.
+    Returns ``None`` when too few non-grass pixels remain to trust the crop.
+    """
     hsv = cv2.cvtColor(crop_bgr, cv2.COLOR_BGR2HSV)
     hue = hsv[:, :, 0]
     sat = hsv[:, :, 1]
     not_grass = ~((hue >= GRASS_HUE[0]) & (hue <= GRASS_HUE[1]) & (sat > 40))
-    if not_grass.sum() < 12:
+    if not_grass.sum() < min_non_grass_px:
         return None
     lab = cv2.cvtColor(crop_bgr, cv2.COLOR_BGR2LAB).astype(np.float32)
     px = lab[not_grass]
     mean_lab = px.mean(axis=0)
     hist = cv2.calcHist([hsv], [0], not_grass.astype(np.uint8) * 255, [8], [0, 180]).ravel()
     hist = hist / (hist.sum() + 1e-9)
-    sig = np.concatenate([[0.5 * mean_lab[0], mean_lab[1], mean_lab[2]], 64.0 * hist])
+    sig = np.concatenate([
+        [0.15 * mean_lab[0],                 # lightness: down-weighted
+         1.6 * (mean_lab[1] - 128.0),        # a* chroma, centred + amplified
+         1.6 * (mean_lab[2] - 128.0)],       # b* chroma, centred + amplified
+        32.0 * hist,
+    ])
     return sig.astype(np.float32)
 
 
@@ -92,7 +107,7 @@ class TeamAssigner:
         crop = torso_crop(frame_bgr, bbox, self.cfg)
         if crop is None:
             return
-        sig = kit_signature(crop)
+        sig = kit_signature(crop, getattr(self.cfg, "min_non_grass_px", 40))
         if sig is None:
             return
         self._samples.setdefault(track_id, []).append(sig)

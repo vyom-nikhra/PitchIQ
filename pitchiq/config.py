@@ -77,6 +77,8 @@ class TeamsConfig(BaseModel):
     torso_inset: float = 0.22
     min_samples_per_track: int = 3
     gk_by_position: bool = True
+    min_torso_height_px: int = 22  # skip crops too small for a reliable kit signature
+    min_non_grass_px: int = 40     # min non-grass pixels required in a torso crop
 
 
 class JerseyConfig(BaseModel):

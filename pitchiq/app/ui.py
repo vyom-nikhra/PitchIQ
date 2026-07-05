@@ -154,6 +154,17 @@ kit = meta.kit_colors
 labels = player_labels(summary, meta.team_names)
 
 st.title(f"{meta.team_names.get('home')} vs {meta.team_names.get('away')}")
+_variant = meta.extras.get("variant")
+if _variant == "cv-pipeline":
+    st.info("**CV-pipeline variant** — every number here was produced by the real "
+            "perception stack (detection → tracking → calibration) on the rendered "
+            "video. Select the ground-truth twin of this match in the sidebar to "
+            "see how the derived analytics compare to exact positions; the honest "
+            "deltas are the point.", icon="🔬")
+elif _variant == "ground-truth":
+    st.caption("Ground-truth variant: positions come directly from the match "
+               "simulator (exact). A CV-pipeline twin may be available in the "
+               "sidebar for comparison.")
 c1, c2, c3, c4 = st.columns(4)
 share = summary.get("possession", {}).get("share", {})
 c1.metric("Possession (home)", f"{100 * share.get('home', 0):.0f}%")

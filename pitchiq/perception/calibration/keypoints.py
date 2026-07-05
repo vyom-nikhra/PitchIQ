@@ -66,7 +66,7 @@ def build_keypoint_net(n_keypoints: int = 33):
 class KeypointCalibrator:
     """Inference wrapper: frame → keypoints → RANSAC homography."""
 
-    INPUT_SIZE = (480, 270)  # (w, h)
+    INPUT_SIZE = (480, 272)  # (w, h) — both divisible by 8 for the U-Net skips
 
     def __init__(self, pitch: Pitch, weights_path: str, min_conf: float = 0.35) -> None:
         import torch

@@ -109,15 +109,15 @@ def main() -> None:
 
     def load_batch(batch):
         imgs, heats = [], []
-        hh, hw = H // 4, W // 4
+        hh, hw = H // 2, W // 2  # the U-Net decodes back to half resolution
         for img_path, kps in batch:
             img = cv2.resize(cv2.imread(str(img_path)), (W, H))[:, :, ::-1] / 255.0
             imgs.append(img.transpose(2, 0, 1).astype(np.float32))
             heat = np.zeros((len(names), hh, hw), dtype=np.float32)
             yy, xx = np.mgrid[0:hh, 0:hw]
             for k, (x, y) in kps.items():
-                cx, cy = x / 4.0, y / 4.0
-                heat[name_idx[k]] = np.exp(-((xx - cx) ** 2 + (yy - cy) ** 2) / (2 * 2.0**2))
+                cx, cy = x / 2.0, y / 2.0
+                heat[name_idx[k]] = np.exp(-((xx - cx) ** 2 + (yy - cy) ** 2) / (2 * 3.0**2))
             heats.append(heat)
         return (torch.from_numpy(np.stack(imgs)).to(device),
                 torch.from_numpy(np.stack(heats)).to(device))

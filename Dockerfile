@@ -21,6 +21,7 @@ RUN pip install --no-cache-dir -e .[app,ml]
 COPY data/demo ./data/demo
 COPY weights ./weights
 
+COPY .streamlit ./.streamlit
 COPY docker/start.sh ./docker/start.sh
 RUN chmod +x docker/start.sh \
     && mkdir -p data/jobs \

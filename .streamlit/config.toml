@@ -1,0 +1,12 @@
+# Streamlit config applied to every launch path (local, docker-compose, HF Space).
+[server]
+headless = true
+# Behind a reverse proxy (Hugging Face Spaces), Streamlit's XSRF-token cookie
+# flow breaks and the file_uploader POST returns 403 (AxiosError). Disabling
+# XSRF/CORS is safe for this single-container app and fixes uploads.
+enableXsrfProtection = false
+enableCORS = false
+maxUploadSize = 500
+
+[browser]
+gatherUsageStats = false

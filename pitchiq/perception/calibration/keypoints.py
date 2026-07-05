@@ -101,17 +101,36 @@ class KeypointCalibrator:
             out[name] = (x / hw * w0, y / hh * h0, conf)
         return out
 
-    def estimate(self, frame_bgr: np.ndarray):
-        """Return (H, reproj_error_px, n_inliers) or None."""
-        kps = self.detect_keypoints(frame_bgr)
-        if len(kps) < 4:
+    def estimate(self, frame_bgr: np.ndarray, solve_conf: float = 0.5):
+        """Return (H, reproj_error_px, n_inliers) or None.
+
+        Hardened against degenerate solves: with few, mixed-quality
+        detections RANSAC happily returns a 4-point *exact* fit (0 px error
+        by construction) that is geometric nonsense. We therefore demand ≥6
+        confident keypoints, a majority-inlier consensus (≥5 and ≥50%), a
+        resolution-scaled RANSAC threshold, and a plausibility check shared
+        with the line calibrator. Out-of-consensus frames return None so the
+        caller falls back to lines/flow instead of trusting garbage.
+        """
+        from pitchiq.perception.calibration.estimate import plausible_homography
+
+        h0, w0 = frame_bgr.shape[:2]
+        kps = {n: v for n, v in self.detect_keypoints(frame_bgr).items()
+               if v[2] >= solve_conf}
+        if len(kps) < 6:
             return None
         img_pts = np.array([[v[0], v[1]] for v in kps.values()])
         world_pts = np.array([self.pitch.keypoints[n] for n in kps])
-        H, inliers = cv2.findHomography(img_pts, world_pts, cv2.RANSAC, 3.0)
-        if H is None or inliers is None or inliers.sum() < 4:
+        ransac_px = max(4.0, 0.008 * w0)
+        H, inliers = cv2.findHomography(img_pts, world_pts, cv2.RANSAC, ransac_px)
+        if H is None or inliers is None:
             return None
         inl = inliers.ravel() == 1
+        n_inl = int(inl.sum())
+        if n_inl < max(5, int(np.ceil(0.5 * len(kps)))):
+            return None
+        if not plausible_homography(H, w0, h0, self.pitch):
+            return None
         try:
             back = cv2.perspectiveTransform(
                 world_pts[inl].reshape(-1, 1, 2).astype(np.float64), np.linalg.inv(H)
@@ -119,4 +138,4 @@ class KeypointCalibrator:
         except np.linalg.LinAlgError:
             return None
         err = float(np.sqrt(np.mean(np.sum((back - img_pts[inl]) ** 2, axis=1))))
-        return H, err, int(inl.sum())
+        return H, err, n_inl

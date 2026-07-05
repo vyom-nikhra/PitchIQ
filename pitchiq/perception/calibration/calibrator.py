@@ -119,8 +119,14 @@ class PitchCalibrator:
         if self.keypoints is not None:
             got = self.keypoints.estimate(frame_bgr)
             if got is not None:
-                H, err, _ = got
-                return H, err, "keypoints", 1.0
+                H, err, n_inl = got
+                # keypoint solves face the same pixel-evidence standard as
+                # line hypotheses: the projected template must land on (and
+                # explain) the white-line mask
+                self.lines.prepare_frame(frame_bgr)
+                score = self.lines.score_homography(H)
+                if score >= self.cfg.min_line_score:
+                    return H, err, "keypoints", score
         hint = self.smoother.current
         hyp = self.lines.estimate(frame_bgr, hint_H=hint)
         if hyp is None:

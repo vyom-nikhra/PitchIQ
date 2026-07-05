@@ -86,6 +86,42 @@ def _template_lines(pitch: Pitch) -> tuple[list[tuple[str, float]], list[tuple[s
     return x_lines, y_lines
 
 
+def plausible_homography(H: np.ndarray, w_img: int, h_img: int, pitch: Pitch) -> bool:
+    """Reject (near-)degenerate homographies — shared by every calibration path.
+
+    A collapsed H (whole image → a point neighbourhood on the template)
+    maximises naive coverage/explanation scores, so these gates run first:
+    the image-corner quad must map to a simple, consistently oriented polygon
+    of believable area, and the local metre-per-pixel scale must be believable
+    and consistent across the frame.
+    """
+    corners = np.array([[0, 0], [w_img, 0], [w_img, h_img], [0, h_img]], dtype=float)
+    quad = apply_homography(H, corners)
+    if not np.all(np.isfinite(quad)):
+        return False
+    x, y = quad[:, 0], quad[:, 1]
+    area = 0.5 * abs(np.dot(x, np.roll(y, -1)) - np.dot(y, np.roll(x, -1)))
+    if not (150.0 <= area <= 4.0 * pitch.length * pitch.width):
+        return False
+    crosses = []
+    for i in range(4):
+        a = quad[(i + 1) % 4] - quad[i]
+        b = quad[(i + 2) % 4] - quad[(i + 1) % 4]
+        crosses.append(a[0] * b[1] - a[1] * b[0])
+    if not (all(cr > 0 for cr in crosses) or all(cr < 0 for cr in crosses)):
+        return False
+    probes = np.array([[w_img * fx, h_img * fy]
+                       for fx in (0.25, 0.5, 0.75) for fy in (0.35, 0.65)])
+    p0 = apply_homography(H, probes)
+    p1 = apply_homography(H, probes + [100.0, 0.0])
+    spans = np.linalg.norm(p1 - p0, axis=1)
+    if not np.all(np.isfinite(spans)):
+        return False
+    if spans.min() < 0.3 or spans.max() > 40.0 or spans.max() / max(spans.min(), 1e-9) > 8.0:
+        return False
+    return True
+
+
 @dataclass
 class Hypothesis:
     H: np.ndarray
@@ -573,43 +609,24 @@ class LineCalibrator:
         return hyp
 
     def _plausible_geometry(self, H: np.ndarray, w_img: int, h_img: int) -> bool:
-        """Reject (near-)degenerate homographies.
+        return plausible_homography(H, w_img, h_img, self.pitch)
 
-        A collapsed H (whole image → a point neighbourhood on the template)
-        maximises naive coverage/explanation scores, so these gates run first:
-        the image-corner quad must map to a simple, consistently oriented
-        polygon of believable area, and the local metre-per-pixel scale must
-        be believable and consistent across the frame.
-        """
-        corners = np.array([[0, 0], [w_img, 0], [w_img, h_img], [0, h_img]], dtype=float)
-        quad = apply_homography(H, corners)
-        if not np.all(np.isfinite(quad)):
-            return False
-        # shoelace area of the mapped view
-        x, y = quad[:, 0], quad[:, 1]
-        area = 0.5 * abs(np.dot(x, np.roll(y, -1)) - np.dot(y, np.roll(x, -1)))
-        if not (150.0 <= area <= 4.0 * self.pitch.length * self.pitch.width):
-            return False
-        # simple + consistently oriented (all cross products same sign)
-        crosses = []
-        for i in range(4):
-            a = quad[(i + 1) % 4] - quad[i]
-            b = quad[(i + 2) % 4] - quad[(i + 1) % 4]
-            crosses.append(a[0] * b[1] - a[1] * b[0])
-        if not (all(cr > 0 for cr in crosses) or all(cr < 0 for cr in crosses)):
-            return False
-        # multi-point scale consistency: metres spanned by 100px, sampled
-        # across the frame, must be sane and not vary absurdly
-        probes = np.array([[w_img * fx, h_img * fy]
-                           for fx in (0.25, 0.5, 0.75) for fy in (0.35, 0.65)])
-        p0 = apply_homography(H, probes)
-        p1 = apply_homography(H, probes + [100.0, 0.0])
-        spans = np.linalg.norm(p1 - p0, axis=1)
-        if not np.all(np.isfinite(spans)):
-            return False
-        if spans.min() < 0.3 or spans.max() > 40.0 or spans.max() / max(spans.min(), 1e-9) > 8.0:
-            return False
-        return True
+    def prepare_frame(self, frame_bgr: np.ndarray) -> None:
+        """Extract + cache the white-line mask WITHOUT running estimation, so
+        :meth:`score_homography` can gate homographies from other sources
+        (keypoint model, manual clicks) against the same pixel evidence."""
+        h_img, w_img = frame_bgr.shape[:2]
+        _segs, mask, _field = extract_pitch_lines(frame_bgr, self.min_seg_len_frac)
+        self._last_mask_dil = cv2.dilate(mask, np.ones((9, 9), np.uint8))
+        self._last_shape = (h_img, w_img)
+        ys_m, xs_m = np.nonzero(mask)
+        if len(xs_m):
+            mask_pts = np.column_stack([xs_m, ys_m]).astype(np.float64)
+            if len(mask_pts) > 400:
+                mask_pts = np.ascontiguousarray(mask_pts[:: len(mask_pts) // 400])
+            self._last_mask_pts = mask_pts
+        else:
+            self._last_mask_pts = None
 
     @staticmethod
     def _keypoint_reproj_error(H: np.ndarray, src: np.ndarray, dst: np.ndarray) -> float:

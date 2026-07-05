@@ -6,7 +6,7 @@ Component truth table. Legend: ✅ fully functional · 🟡 functional with docu
 - ✅ Config system (pydantic + YAML deep-merge, cache-invalidating config hash)
 - ✅ Core models: pitch (33 keypoints), tracking-table schema + parquet IO, MatchMeta, ArtifactStore, .env secret loader (keys never in code/commits)
 - 🟡 Data loaders: Metrica / StatsBomb / SoccerNet / Roboflow — wired with legal guardrails; downloads on demand (`scripts/download_data.py`)
-- 🟡 Detection: YOLOv11 + RT-DETR behind one interface; COCO fallback (GK/ref via heuristics) until `scripts/train_detector.py` is run; blob fallback for synthetic/no-torch
+- ✅ Detection: YOLOv11 fine-tuned on football (player mAP50 0.99 / GK 0.96 / ref 0.98 / ball 0.63), verified on real CL footage (~19 players/frame, native classes); RT-DETR behind same interface; COCO + blob fallbacks retained for graceful degradation
 - ✅ Tracking: self-contained ByteTrack + appearance + camera-motion compensation; native MOTA/IDF1
 - ✅ Team assignment (kit clustering + GK/ref heuristics + separability score)
 - 🟡 Jersey OCR: easyocr backend + track voting (easyocr optional install)
@@ -45,9 +45,11 @@ Kinematics · possession (0.647 vs 0.650 GT) · heatmaps/territory · formations
 ## Phase 6 — Trained models (stretch → landed)
 - ✅ **Detector fine-tuned** (user-run on Kaggle, T4): YOLOv11n on Roboflow football — player mAP50 0.993, GK 0.956, referee 0.977, ball 0.625; integrated at `weights/football_yolo11n.pt`; verified on real footage (20–21 players/frame, native classes)
 - ✅ **Keypoint model v2 trained & ACCEPTED** (RTX 3050, SoccerNet-Calibration, NDA-local): expanded supervision (circle/arc/goal-line constructions + orientation disambiguation) → 457 GT keypoints/frame vs v1's 286; **100% detection / 2.9 px median** on held-out valid split. Decisive: real broadcast frames that v1 failed entirely now solve cleanly (17–21 kps, plausible H at ~46m centre). Solve path hardened (≥6-pt consensus + plausibility + mask-score gates — degenerate exact-fits refuse instead of lying). Correctly declines on synthetic renders (trained on real footage) → line/conic fallback there.
-- ✅ **Team assignment fixed for real footage**: chroma-first kit signature (down-weight L*, amplify centred a*/b*) + size/pixel gates. Real RMA-vs-City clustering balance 0.10 → **0.89** (collapse resolved). Similar-tone kits still marginal separability ~1.7 (documented).
-- 🔄 Real broadcast clip (RMA vs MC, 50s): full product-stack pipeline running (fine-tuned YOLO + v2 keypoints + team fix, GPU)
-- ⬜ Remaining: real-clip run completion + app screenshot · final synthetic validation numbers → README · docker smoke · key rotation
+- ✅ **Calibration 320× faster on real footage**: keypoint solves (already consensus/plausibility-gated) were re-rejected by a synthetic-tuned mask gate → forced per-frame line search (0.1 fps). Now trust keypoints; line search only when no keypoint model. Keypoint CNN runs on GPU. Measured 0.1 → 31.9 fps, quality unchanged.
+- ✅ **Team assignment: whitened K-Means** (standardise signature dims) fixes the raw-scale-dimension collapse. Works when kits differ in hue. HONEST LIMIT: near-identical kits at low res (RMA-white vs City-sky-blue, 576p) still lump together (~13 vs 1/frame) — separability surfaced in meta flags low confidence; real fix needs re-ID embedder or higher res. Documented.
+- ✅ **Real broadcast run COMPLETE** (RMA vs MC, 50s, 193s on GPU): detection excellent, keypoint calibration solves the pan (464 keyframes vs 14 for line-only), radar projects real positions. Flagship annotated frame captured. Team colour is the one weak spot (above).
+- ✅ Deployment fix: `git lfs migrate` had left demo parquets as pointer stubs in the working tree (local app read them as corrupt) → `git lfs pull` restored; LFS content intact in remote so GitHub/HF unaffected. HF Space verified RUNNING/public.
+- 🔄 Remaining (mechanical): final synthetic validation numbers → README table · docker smoke · key rotation reminder · push all fixes to HF Space
 
 ## Phase 6 — Stretch
 - ✅ RT-DETR vs YOLO benchmark harness (`train_detector.py --benchmark`)

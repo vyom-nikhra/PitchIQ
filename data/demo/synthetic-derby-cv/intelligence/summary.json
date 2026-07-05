@@ -1,0 +1,28 @@
+{
+  "n_players_embedded": 0,
+  "embedding_method": "handcrafted",
+  "roles": {},
+  "role_mismatches": [],
+  "marking": {
+    "home": {
+      "open_play": [
+        "hybrid",
+        0.532
+      ],
+      "set_piece": [
+        null,
+        null
+      ]
+    },
+    "away": {
+      "open_play": [
+        "zonal",
+        0.438
+      ],
+      "set_piece": [
+        null,
+        null
+      ]
+    }
+  }
+}

@@ -61,6 +61,10 @@ def segment_phases(df: pd.DataFrame, possession: pd.DataFrame, meta: MatchMeta,
             continue
         sign = meta.attack_sign(team, int(f))
         x_att = bx[i] if sign > 0 else meta.pitch_length - bx[i]
+        if not np.isfinite(x_att):  # uncalibrated ball frame: don't fabricate a zone
+            phases[i] = "contested"
+            postures[i] = "mid_block"
+            continue
         if is_dead[i]:
             phases[i] = "set_piece"
         elif since_change_s[i] <= cfg.transition_window_s and x_att > cfg.third_boundaries_m[0]:

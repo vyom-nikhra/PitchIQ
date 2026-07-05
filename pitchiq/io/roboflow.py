@@ -29,7 +29,9 @@ def download_dataset(
     fmt: str = "yolov11",
 ) -> Path:
     """Download the annotated football detection dataset in YOLO format."""
-    api_key = os.environ.get("ROBOFLOW_API_KEY")
+    from pitchiq.core.env import get_secret
+
+    api_key = get_secret("ROBOFLOW_API_KEY")
     if not api_key:
         raise DatasetUnavailable(
             "Set ROBOFLOW_API_KEY (free at https://roboflow.com) to download the "

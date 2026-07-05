@@ -20,14 +20,21 @@ def compute_possession(df: pd.DataFrame, fps: float, cfg: PossessionConfig) -> p
 
     holder_id = -1 / team='none' where nobody controls the ball (in flight,
     dead, or no ball observation).
+
+    Frames whose ball row lacks pitch coordinates (uncalibrated frames in CV
+    output) are excluded up front — they would otherwise form all-NaN
+    distance groups, which pandas' grouped idxmin refuses.
     """
-    ball = ball_series(df)
+    ball = ball_series(df).dropna(subset=["x_pitch", "y_pitch"])
     persons = players_only(df)
     merged = persons.merge(
         ball[["x_pitch", "y_pitch"]].rename(columns={"x_pitch": "bx", "y_pitch": "by"}),
         left_on="frame", right_index=True, how="inner",
     )
     merged["dist"] = np.hypot(merged.x_pitch - merged.bx, merged.y_pitch - merged.by)
+    merged = merged.dropna(subset=["dist"])
+    if merged.empty:
+        return pd.DataFrame(columns=["frame", "holder_id", "team", "dist_m"])
     nearest = merged.loc[merged.groupby("frame")["dist"].idxmin(),
                          ["frame", "entity_id", "team", "dist"]]
 

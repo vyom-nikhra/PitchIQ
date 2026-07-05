@@ -1,0 +1,180 @@
+{
+  "home": {
+    "open_play": {
+      "team_man_score": 0.532,
+      "scheme": "hybrid",
+      "per_defender": {
+        "46": {
+          "assignment_stability": 0.5,
+          "position_coupling": 0.765,
+          "spatial_spread_m": 29.04,
+          "man_score": 0.412
+        },
+        "51": {
+          "assignment_stability": 0.5,
+          "position_coupling": 0.672,
+          "spatial_spread_m": 26.94,
+          "man_score": 0.377
+        },
+        "107": {
+          "assignment_stability": 0.9,
+          "position_coupling": 0.942,
+          "spatial_spread_m": 6.01,
+          "man_score": 0.861
+        },
+        "128": {
+          "assignment_stability": 0.35,
+          "position_coupling": 0.468,
+          "spatial_spread_m": 11.08,
+          "man_score": 0.21
+        },
+        "135": {
+          "assignment_stability": 0.5,
+          "position_coupling": 0.388,
+          "spatial_spread_m": 4.67,
+          "man_score": 0.27
+        },
+        "140": {
+          "assignment_stability": 1.0,
+          "position_coupling": 0.415,
+          "spatial_spread_m": 5.72,
+          "man_score": 0.561
+        },
+        "141": {
+          "assignment_stability": 0.5,
+          "position_coupling": 0.561,
+          "spatial_spread_m": 4.32,
+          "man_score": 0.335
+        },
+        "148": {
+          "assignment_stability": 1.0,
+          "position_coupling": 0.979,
+          "spatial_spread_m": 3.94,
+          "man_score": 0.984
+        },
+        "154": {
+          "assignment_stability": 1.0,
+          "position_coupling": 0.926,
+          "spatial_spread_m": 7.0,
+          "man_score": 0.945
+        },
+        "159": {
+          "assignment_stability": 0.75,
+          "position_coupling": 0.978,
+          "spatial_spread_m": 3.16,
+          "man_score": 0.737
+        },
+        "199": {
+          "assignment_stability": 0.5,
+          "position_coupling": 0.833,
+          "spatial_spread_m": 4.1,
+          "man_score": 0.437
+        },
+        "203": {
+          "assignment_stability": 0.5,
+          "position_coupling": -0.139,
+          "spatial_spread_m": 2.0,
+          "man_score": 0.125
+        },
+        "676": {
+          "assignment_stability": 0.75,
+          "position_coupling": 0.845,
+          "spatial_spread_m": 5.63,
+          "man_score": 0.663
+        }
+      },
+      "pairs": [
+        {
+          "defender_id": 148,
+          "attacker_id": 146,
+          "share": 1.0,
+          "avg_dist_m": 10.3
+        },
+        {
+          "defender_id": 154,
+          "attacker_id": 171,
+          "share": 1.0,
+          "avg_dist_m": 6.28
+        },
+        {
+          "defender_id": 107,
+          "attacker_id": 166,
+          "share": 0.833,
+          "avg_dist_m": 7.85
+        },
+        {
+          "defender_id": 140,
+          "attacker_id": 149,
+          "share": 0.8,
+          "avg_dist_m": 11.31
+        },
+        {
+          "defender_id": 676,
+          "attacker_id": 650,
+          "share": 0.75,
+          "avg_dist_m": 7.85
+        },
+        {
+          "defender_id": 159,
+          "attacker_id": 172,
+          "share": 0.714,
+          "avg_dist_m": 2.68
+        }
+      ],
+      "n_samples": 34
+    },
+    "set_piece": {
+      "note": "not enough defensive samples"
+    }
+  },
+  "away": {
+    "open_play": {
+      "team_man_score": 0.438,
+      "scheme": "zonal",
+      "per_defender": {
+        "684": {
+          "assignment_stability": 0.5,
+          "position_coupling": 0.565,
+          "spatial_spread_m": 4.84,
+          "man_score": 0.337
+        },
+        "693": {
+          "assignment_stability": 0.5,
+          "position_coupling": 0.733,
+          "spatial_spread_m": 1.58,
+          "man_score": 0.4
+        },
+        "697": {
+          "assignment_stability": 0.5,
+          "position_coupling": 0.847,
+          "spatial_spread_m": 3.74,
+          "man_score": 0.443
+        },
+        "699": {
+          "assignment_stability": 0.5,
+          "position_coupling": 0.96,
+          "spatial_spread_m": 1.27,
+          "man_score": 0.485
+        },
+        "701": {
+          "assignment_stability": 0.75,
+          "position_coupling": 0.598,
+          "spatial_spread_m": 3.38,
+          "man_score": 0.524
+        }
+      },
+      "pairs": [
+        {
+          "defender_id": 701,
+          "attacker_id": 696,
+          "share": 0.8,
+          "avg_dist_m": 11.4
+        }
+      ],
+      "n_samples": 8
+    },
+    "set_piece": {
+      "note": "not enough defensive samples"
+    }
+  }
+}

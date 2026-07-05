@@ -1,0 +1,439 @@
+{
+  "match": {
+    "teams": {
+      "home": "Home",
+      "away": "Away"
+    },
+    "duration_min": 4.0,
+    "source": "video:input.mp4|detector:blob-fallback",
+    "is_synthetic": false
+  },
+  "possession": {
+    "share": {
+      "away": 0.8095,
+      "home": 0.1905
+    },
+    "n_spells": 41,
+    "avg_spell_s": {
+      "away": 6.46,
+      "home": 4.14
+    },
+    "longest_spell_s": {
+      "away": 24.0,
+      "home": 13.6
+    }
+  },
+  "field_tilt": {
+    "away": {
+      "final_third_share": 0.218,
+      "own_third_share": 0.487,
+      "mean_ball_x_att": 44.3
+    },
+    "home": {
+      "final_third_share": 0.545,
+      "own_third_share": 0.312,
+      "mean_ball_x_att": 59.3
+    },
+    "tilt_home": 0.714
+  },
+  "territory": {
+    "away": {
+      "defensive_third_left": 0.452,
+      "middle_third": 0.302,
+      "final_third_right": 0.245
+    },
+    "home": {
+      "defensive_third_left": 0.439,
+      "middle_third": 0.385,
+      "final_third_right": 0.176
+    }
+  },
+  "formations": {
+    "away": {
+      "in_possession": {
+        "formation": "3-4-3",
+        "stability": 0.42,
+        "avg_hull_area_m2": 891.6,
+        "avg_width_m": 38.8,
+        "avg_depth_m": 37.6
+      },
+      "out_possession": {
+        "formation": "4-5-1",
+        "stability": 0.33,
+        "avg_hull_area_m2": 673.1,
+        "avg_width_m": 41.5,
+        "avg_depth_m": 27.3
+      },
+      "transitions": [
+        {
+          "state": "in",
+          "from": "4-4-1-1",
+          "to": "4-1-4-1"
+        },
+        {
+          "state": "out",
+          "from": "4-5-1",
+          "to": "5-4-1"
+        },
+        {
+          "state": "in",
+          "from": "4-1-4-1",
+          "to": "3-4-3"
+        },
+        {
+          "state": "in",
+          "from": "3-4-3",
+          "to": "4-3-3"
+        },
+        {
+          "state": "in",
+          "from": "4-3-3",
+          "to": "5-3-2"
+        },
+        {
+          "state": "out",
+          "from": "5-4-1",
+          "to": "3-4-3"
+        },
+        {
+          "state": "in",
+          "from": "5-3-2",
+          "to": "4-3-3"
+        },
+        {
+          "state": "out",
+          "from": "3-4-3",
+          "to": "5-3-2"
+        },
+        {
+          "state": "in",
+          "from": "4-3-3",
+          "to": "5-3-2"
+        },
+        {
+          "state": "out",
+          "from": "5-3-2",
+          "to": "4-5-1"
+        },
+        {
+          "state": "in",
+          "from": "5-3-2",
+          "to": "4-2-3-1"
+        },
+        {
+          "state": "in",
+          "from": "4-2-3-1",
+          "to": "3-4-3"
+        },
+        {
+          "state": "out",
+          "from": "4-5-1",
+          "to": "4-3-3"
+        }
+      ],
+      "shape_morph": "3-4-3 in possession \u2192 4-5-1 out of possession"
+    },
+    "home": {
+      "in_possession": {
+        "formation": "3-5-2",
+        "stability": 0.5,
+        "avg_hull_area_m2": 546.9,
+        "avg_width_m": 30.9,
+        "avg_depth_m": 22.3
+      },
+      "out_possession": {
+        "formation": "4-3-3",
+        "stability": 0.2,
+        "avg_hull_area_m2": 884.1,
+        "avg_width_m": 37.8,
+        "avg_depth_m": 35.8
+      },
+      "transitions": [
+        {
+          "state": "out",
+          "from": "4-3-3",
+          "to": "5-4-1"
+        },
+        {
+          "state": "out",
+          "from": "5-4-1",
+          "to": "4-3-3"
+        },
+        {
+          "state": "out",
+          "from": "4-3-3",
+          "to": "3-4-3"
+        },
+        {
+          "state": "out",
+          "from": "3-4-3",
+          "to": "3-5-2"
+        },
+        {
+          "state": "out",
+          "from": "3-5-2",
+          "to": "4-2-3-1"
+        },
+        {
+          "state": "out",
+          "from": "4-2-3-1",
+          "to": "5-3-2"
+        },
+        {
+          "state": "out",
+          "from": "5-3-2",
+          "to": "5-4-1"
+        },
+        {
+          "state": "out",
+          "from": "5-4-1",
+          "to": "5-3-2"
+        },
+        {
+          "state": "in",
+          "from": "4-2-3-1",
+          "to": "3-5-2"
+        },
+        {
+          "state": "out",
+          "from": "5-3-2",
+          "to": "4-4-2"
+        }
+      ],
+      "shape_morph": "3-5-2 in possession \u2192 4-3-3 out of possession"
+    }
+  },
+  "shape": {
+    "away": {
+      "in_possession": {
+        "def_line_height_m": 45.0,
+        "depth_m": 22.4,
+        "width_m": 36.1
+      },
+      "out_possession": {
+        "def_line_height_m": 30.3,
+        "depth_m": 23.5,
+        "width_m": 41.6
+      },
+      "block_label": "mid block"
+    },
+    "home": {
+      "in_possession": {
+        "def_line_height_m": 60.2,
+        "depth_m": 18.8,
+        "width_m": 31.4
+      },
+      "out_possession": {
+        "def_line_height_m": 55.3,
+        "depth_m": 19.7,
+        "width_m": 33.9
+      },
+      "block_label": "high line"
+    }
+  },
+  "pitch_control": {
+    "home_mean_control": 0.497,
+    "home_final_third_control": 0.474
+  },
+  "pressing": {
+    "home": {
+      "pressures": 24,
+      "pressures_per_min": 6.0,
+      "press_height_mean_m": 66.1,
+      "high_press_share": 0.667,
+      "press_to_turnover_rate": 0.208
+    },
+    "away": {
+      "pressures": 19,
+      "pressures_per_min": 4.75,
+      "press_height_mean_m": 26.2,
+      "high_press_share": 0.105,
+      "press_to_turnover_rate": 0.421
+    }
+  },
+  "ppda": {
+    "home": {
+      "ppda": 0.2,
+      "opp_buildup_passes": 5,
+      "defensive_actions": 25
+    },
+    "away": {
+      "ppda": 0.25,
+      "opp_buildup_passes": 1,
+      "defensive_actions": 4
+    }
+  },
+  "events": {
+    "n_passes": 8,
+    "n_completed_passes": 6,
+    "n_turnovers": 13,
+    "n_carries": 1
+  },
+  "counter_attacks": [
+    {
+      "frame": 989,
+      "team": "away",
+      "gain_m": 25.3,
+      "duration_s": 6.96,
+      "speed_m_per_s": 3.64
+    },
+    {
+      "frame": 1007,
+      "team": "away",
+      "gain_m": 26.5,
+      "duration_s": 7.6,
+      "speed_m_per_s": 3.49
+    }
+  ],
+  "line_breaking": {
+    "total": 0,
+    "by_team": {}
+  },
+  "phases": {
+    "share_overall": {
+      "build_up": 0.452,
+      "progression": 0.191,
+      "transition_attack": 0.189,
+      "final_third_attack": 0.165,
+      "contested": 0.003
+    },
+    "home_in_possession": {
+      "transition_attack": 0.492,
+      "build_up": 0.312,
+      "final_third_attack": 0.133,
+      "progression": 0.064
+    },
+    "home_defending_posture": {
+      "high_press": 0.711,
+      "low_block": 0.192,
+      "mid_block": 0.098
+    },
+    "away_in_possession": {
+      "build_up": 0.487,
+      "progression": 0.221,
+      "final_third_attack": 0.173,
+      "transition_attack": 0.119
+    },
+    "away_defending_posture": {
+      "low_block": 0.501,
+      "high_press": 0.392,
+      "mid_block": 0.106
+    }
+  },
+  "team_distance_m": {
+    "home": 2344.0,
+    "away": 3468.0
+  },
+  "physical": {
+    "top_distance_per_min": [],
+    "top_speed": []
+  },
+  "expected_threat": {
+    "top_players": [
+      {
+        "player": "player 50 (Away)",
+        "xt_created": 0.028,
+        "n_moves": 1
+      },
+      {
+        "player": "player 243 (Away)",
+        "xt_created": 0.01,
+        "n_moves": 1
+      },
+      {
+        "player": "player 96 (Away)",
+        "xt_created": 0.001,
+        "n_moves": 1
+      },
+      {
+        "player": "player 153 (Away)",
+        "xt_created": 0.0008,
+        "n_moves": 1
+      },
+      {
+        "player": "player 604 (Away)",
+        "xt_created": 0.0006,
+        "n_moves": 1
+      },
+      {
+        "player": "player 25 (Away)",
+        "xt_created": 0.0,
+        "n_moves": 1
+      }
+    ],
+    "team_created": {
+      "away": 0.04
+    }
+  },
+  "pass_network": {
+    "home": {
+      "n_passes": null,
+      "density": null
+    },
+    "away": {
+      "n_passes": 6,
+      "density": 0.045,
+      "most_central_player": "player 25 (Away)",
+      "top_combination": "player 25 (Away) \u2192 player 62 (Away) (1 passes)"
+    }
+  },
+  "roles": {
+    "by_player": {},
+    "clusters": [],
+    "nominal_vs_actual": [],
+    "embedding_method": null
+  },
+  "marking": {
+    "home": {
+      "scheme": "hybrid",
+      "man_score": 0.532,
+      "pairs": [
+        {
+          "defender": "player 148 (Home)",
+          "marks": "player 146 (Away)",
+          "share": 1.0
+        },
+        {
+          "defender": "player 154 (Home)",
+          "marks": "player 171 (Away)",
+          "share": 1.0
+        },
+        {
+          "defender": "player 107 (Home)",
+          "marks": "player 166 (Away)",
+          "share": 0.833
+        },
+        {
+          "defender": "player 140 (Home)",
+          "marks": "player 149 (Away)",
+          "share": 0.8
+        },
+        {
+          "defender": "player 676 (Home)",
+          "marks": "player 650 (Away)",
+          "share": 0.75
+        },
+        {
+          "defender": "player 159 (Home)",
+          "marks": "player 172 (Away)",
+          "share": 0.714
+        }
+      ]
+    },
+    "away": {
+      "scheme": "zonal",
+      "man_score": 0.438,
+      "pairs": [
+        {
+          "defender": "player 701 (Away)",
+          "marks": "player 696 (Home)",
+          "share": 0.8
+        }
+      ]
+    }
+  },
+  "intelligence_meta": {
+    "n_players_embedded": 0,
+    "embedding_method": "handcrafted"
+  }
+}

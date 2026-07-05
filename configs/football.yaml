@@ -1,0 +1,23 @@
+# Config for real broadcast footage with locally trained models.
+# Usage: point the pipeline at this config once you have run the training
+# scripts (docs/training.md). Every entry falls back gracefully if the
+# weights are missing.
+
+detection:
+  backend: yolo
+  weights: runs/detector/football/weights/best.pt   # scripts/train_detector.py
+  conf_threshold: 0.3
+  imgsz: 1280
+
+calibration:
+  method: auto
+  keypoint_weights: weights/pitch_keypoints.pt      # scripts/train_pitch_keypoints.py
+
+jersey:
+  enabled: true
+  backend: easyocr
+
+embeddings:
+  learned:
+    enabled: auto
+    weights: weights/style_encoder.pt               # scripts/train_style_encoder.py

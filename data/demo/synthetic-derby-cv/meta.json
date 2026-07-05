@@ -1,0 +1,23 @@
+{
+  "fps": 25.0,
+  "n_frames": 6000,
+  "pitch_length": 105.0,
+  "pitch_width": 68.0,
+  "team_names": {
+    "home": "Home",
+    "away": "Away"
+  },
+  "kit_colors": {
+    "home": "#cd5046",
+    "away": "#569079"
+  },
+  "attack_direction": {
+    "home": -1,
+    "away": 1
+  },
+  "source": "video:input.mp4|detector:blob-fallback",
+  "extras": {
+    "team_separability": 2.0469101641302574,
+    "notes": []
+  }
+}

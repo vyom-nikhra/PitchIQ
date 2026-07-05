@@ -32,14 +32,22 @@ Kinematics · possession (0.647 vs 0.650 GT) · heatmaps/territory · formations
 - ✅ Pass detection (R 0.93 vs GT) · pass networks + centralities · line-breaking passes · xT (damped value iteration + attribution) · pressing/PPDA · counters · phase segmentation
 - ✅ Grounded report: **Gemini primary (live-verified)**, Anthropic optional, deterministic template fallback; metrics appendix; grounded Q&A w/ retrieval fallback
 
-## Phase 5 — Web app + deployment ✅
-- ✅ FastAPI (async jobs, artifact serving, Q&A endpoint) · Streamlit 5-tab dashboard — **all tabs verified rendering in a live browser session**
+## Phase 5 — Web app + deployment ✅ SHIPPED
+- ✅ **LIVE: https://huggingface.co/spaces/NuclearPanda/PitchIQ (public, RUNNING)**
+- ✅ **Source: https://github.com/vyom-nikhra/PitchIQ (public, LFS for all binaries)**
+- ✅ FastAPI (async jobs, artifact serving, Q&A endpoint) · Streamlit 5-tab dashboard — all tabs verified in live browser
 - ✅ Video-synced tactical radar (canvas + embedded positions; standalone fallback)
-- ✅ Bundled GT demo match (learned embeddings, Gemini report, preview media)
-- 🔄 CV-variant demo (full perception on rendered video) — building in background
-- ✅ Dockerfile (single container, no baked secrets) + compose + HF Spaces config
-- ✅ README + docs (architecture / calibration / limitations / data+NDA / deployment / training)
-- ⬜ validation.md regeneration via `scripts/validate_synthetic.py` (queued behind CV build)
+- ✅ Bundled demos: GT variant + CV-pipeline variant with honest comparison banner
+- ✅ Docker (publish hurdles solved: HF requires LFS for ALL binaries across history; gitignore dir-negation trap on weights)
+- ✅ GEMINI_API_KEY configured as Space secret (user)
+- 🔄 validation.md regeneration running (fixed yardsticks: kit-colour team alignment, symmetric MOT proxies)
+
+## Phase 6 — Trained models (stretch → landed)
+- ✅ **Detector fine-tuned** (user-run on Kaggle, T4): YOLOv11n on Roboflow football — player mAP50 0.993, GK 0.956, referee 0.977, ball 0.625; integrated at `weights/football_yolo11n.pt`; verified on real footage (20–21 players/frame, native classes)
+- ✅ Keypoint model v1 trained locally (RTX 3050, SoccerNet-Calibration, NDA-local): **99% detection / 1.5 px median** on valid split; solve path hardened (consensus + plausibility + mask-score gates — degenerate exact-fits now refuse instead of lying)
+- 🔄 Keypoint v2 retraining (expanded supervision: circle/arc/goal-line constructions w/ orientation disambiguation; prefetch loader ~2× faster; per-epoch checkpoints)
+- ✅ Real broadcast clip acquired (RMA vs MC, 50 s segment); detection verified; full pipeline run queued behind keypoint v2
+- ⬜ Remaining: real-clip end-to-end run · CV-demo recalibration w/ keypoints · final validation numbers → README
 
 ## Phase 6 — Stretch
 - ✅ RT-DETR vs YOLO benchmark harness (`train_detector.py --benchmark`)

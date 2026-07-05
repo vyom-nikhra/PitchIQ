@@ -44,10 +44,10 @@ Kinematics · possession (0.647 vs 0.650 GT) · heatmaps/territory · formations
 
 ## Phase 6 — Trained models (stretch → landed)
 - ✅ **Detector fine-tuned** (user-run on Kaggle, T4): YOLOv11n on Roboflow football — player mAP50 0.993, GK 0.956, referee 0.977, ball 0.625; integrated at `weights/football_yolo11n.pt`; verified on real footage (20–21 players/frame, native classes)
-- ✅ Keypoint model v1 trained locally (RTX 3050, SoccerNet-Calibration, NDA-local): **99% detection / 1.5 px median** on valid split; solve path hardened (consensus + plausibility + mask-score gates — degenerate exact-fits now refuse instead of lying)
-- 🔄 Keypoint v2 retraining (expanded supervision: circle/arc/goal-line constructions w/ orientation disambiguation; prefetch loader ~2× faster; per-epoch checkpoints)
-- ✅ Real broadcast clip acquired (RMA vs MC, 50 s segment); detection verified; full pipeline run queued behind keypoint v2
-- ⬜ Remaining: real-clip end-to-end run · CV-demo recalibration w/ keypoints · final validation numbers → README
+- ✅ **Keypoint model v2 trained & ACCEPTED** (RTX 3050, SoccerNet-Calibration, NDA-local): expanded supervision (circle/arc/goal-line constructions + orientation disambiguation) → 457 GT keypoints/frame vs v1's 286; **100% detection / 2.9 px median** on held-out valid split. Decisive: real broadcast frames that v1 failed entirely now solve cleanly (17–21 kps, plausible H at ~46m centre). Solve path hardened (≥6-pt consensus + plausibility + mask-score gates — degenerate exact-fits refuse instead of lying). Correctly declines on synthetic renders (trained on real footage) → line/conic fallback there.
+- ✅ **Team assignment fixed for real footage**: chroma-first kit signature (down-weight L*, amplify centred a*/b*) + size/pixel gates. Real RMA-vs-City clustering balance 0.10 → **0.89** (collapse resolved). Similar-tone kits still marginal separability ~1.7 (documented).
+- 🔄 Real broadcast clip (RMA vs MC, 50s): full product-stack pipeline running (fine-tuned YOLO + v2 keypoints + team fix, GPU)
+- ⬜ Remaining: real-clip run completion + app screenshot · final synthetic validation numbers → README · docker smoke · key rotation
 
 ## Phase 6 — Stretch
 - ✅ RT-DETR vs YOLO benchmark harness (`train_detector.py --benchmark`)

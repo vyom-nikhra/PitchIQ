@@ -10,16 +10,29 @@ by impact.
    rows carry decayed confidence); airborne balls additionally project wrong
    through the ground-plane homography. Everything ball-derived (possession,
    passes, xT) inherits this noise on real footage.
-2. **Box-only camera views** lack direct calibration (collinear
-   constraints); they ride on optical-flow propagation with bounded drift
-   (~3–5 m worst observed on synthetic). Fix: train the pitch-keypoint model.
-3. **COCO detector fallback** (until you fine-tune on the Roboflow set):
-   goalkeepers and referees arrive labelled "person" and are recovered by
-   colour-outlier + position heuristics, which can mislabel in crowded
-   goalmouths. The blob detector variant is for synthetic renders only.
-4. **Team assignment** assumes two dominant kit colours; very similar kits
-   lower the separability score (reported in meta) and may flip individual
-   tracks under heavy shadow.
+2. **Box-only camera views** lack direct *line* calibration (collinear
+   constraints). **Resolved for real footage** by the trained pitch-keypoint
+   model (`scripts/train_pitch_keypoints.py`, SoccerNet-Calibration): on a
+   held-out validation split it localises 100% of derivable keypoints at
+   2.9 px median, and on real broadcast frames that previously failed
+   entirely it now solves cleanly (17–21 keypoints, plausible homographies).
+   The model is trained on *real* footage, so on the synthetic renderer it
+   (correctly) declines and the pipeline falls back to line/conic
+   calibration, which already achieves 0.25 m there. Without the model,
+   box-only views ride optical-flow propagation with bounded drift.
+3. **Detector**: a YOLOv11n fine-tuned on the Roboflow football set
+   (`weights/football_yolo11n.pt`) emits native ball/goalkeeper/player/
+   referee classes — validation mAP50 0.89 (player 0.99, GK 0.96, ref 0.98,
+   ball 0.63). The COCO-person fallback (GK/referee via colour+position
+   heuristics) and the synthetic-only blob detector remain as graceful
+   degradation when no weights are supplied.
+4. **Team assignment** assumes two dominant kit colours. The chroma-first
+   signature keeps balanced clusters even on 576p footage (measured 0.89
+   cluster balance on RMA-vs-Man City where the earlier lightness-heavy
+   signature collapsed to ~0.10). Similar-tone kits (white vs sky-blue at
+   low resolution) still yield only marginal separability (~1.7, surfaced in
+   meta) so individual track labels can be noisy; higher resolution or an
+   embedding-based team model would sharpen it.
 5. **Tracking through congestion** (corners, goalmouths): ByteTrack +
    appearance recovers most occlusions, but long same-kit overlaps still
    cause ID switches; jersey OCR (when enabled) re-anchors identities only

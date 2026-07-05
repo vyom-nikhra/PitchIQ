@@ -34,10 +34,14 @@ def segment_phases(df: pd.DataFrame, possession: pd.DataFrame, meta: MatchMeta,
     poss = possession.set_index("frame").reindex(full_index)
     poss_team = poss["team"].fillna("none").to_numpy(dtype=object)
 
-    # possession-change recency
-    change_frames = full_index[np.r_[True, poss_team[1:] != poss_team[:-1]]]
-    last_change = np.searchsorted(change_frames, full_index, side="right") - 1
-    since_change_s = (full_index - change_frames[np.clip(last_change, 0, None)]) / fps
+    # possession-change recency + ball position at the change (a transition is
+    # only a transition if the ball actually goes somewhere)
+    change_mask = np.r_[True, poss_team[1:] != poss_team[:-1]]
+    change_frames = full_index[change_mask]
+    change_bx = bx[change_mask]
+    last_change = np.clip(np.searchsorted(change_frames, full_index, side="right") - 1, 0, None)
+    since_change_s = (full_index - change_frames[last_change]) / fps
+    bx_at_change = change_bx[last_change]
 
     # dead-ball detection: sustained near-zero ball speed
     dead_run = np.zeros(len(full_index))
@@ -65,9 +69,13 @@ def segment_phases(df: pd.DataFrame, possession: pd.DataFrame, meta: MatchMeta,
             phases[i] = "contested"
             postures[i] = "mid_block"
             continue
+        forward_gain = (x_att - (bx_at_change[i] if sign > 0
+                                 else meta.pitch_length - bx_at_change[i])
+                        if np.isfinite(bx_at_change[i]) else 0.0)
         if is_dead[i]:
             phases[i] = "set_piece"
-        elif since_change_s[i] <= cfg.transition_window_s and x_att > cfg.third_boundaries_m[0]:
+        elif (since_change_s[i] <= cfg.transition_window_s
+              and x_att > cfg.third_boundaries_m[0] and forward_gain >= 8.0):
             phases[i] = "transition_attack"
         elif x_att < cfg.third_boundaries_m[0]:
             phases[i] = "build_up"

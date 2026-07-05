@@ -149,7 +149,17 @@ class TeamAssigner:
             notes.append("too few outfield tracks for team clustering")
             return TeamAssignmentResult({t: Team.NONE for t in usable}, notes=notes)
 
-        X = np.stack([usable[t] for t in field_ids])
+        X_raw = np.stack([usable[t] for t in field_ids])
+        # Standardise (whiten) each signature dimension before K-Means. Without
+        # this, a single large-scale dimension dominates the Euclidean split and
+        # collapses one team into a tiny outlier cluster — which is exactly what
+        # happened on 576p white-vs-sky-blue footage, where the teams differ
+        # mostly in lightness (small absolute spread) rather than a large-scale
+        # channel. Whitening lets K-Means find the true 2-team structure on
+        # whichever axis carries the signal.
+        mu = X_raw.mean(axis=0)
+        sd = X_raw.std(axis=0) + 1e-6
+        X = (X_raw - mu) / sd
         km = KMeans(n_clusters=2, n_init=10, random_state=0).fit(X)
         labels = km.labels_
         d_own = np.linalg.norm(X - km.cluster_centers_[labels], axis=1)
@@ -161,8 +171,12 @@ class TeamAssigner:
                 f"kit colours poorly separable (score {separability:.2f}); team labels may be noisy"
             )
 
-        # outliers: far from both centroids -> referee/GK candidates (COCO mode)
-        outlier_thresh = 2.5 * intra
+        # outliers: far from both centroids -> referee/GK candidates (COCO mode).
+        # The threshold is scale-robust in the whitened space: a genuine team
+        # member sits close to its centroid relative to the inter-centroid gap,
+        # so requiring the distance to also exceed a fraction of that gap avoids
+        # flagging normal members when clusters are tight.
+        outlier_thresh = max(2.5 * intra, 0.6 * inter)
         detector_has_classes = bool(ref_ids or gk_ids)
         for i, tid in enumerate(field_ids):
             if d_own[i] > outlier_thresh and not detector_has_classes:

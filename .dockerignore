@@ -16,3 +16,10 @@ tests
 docs
 *.mkv
 *.avi
+
+# Only the licence-clean style encoder may enter the image. NDA-derived
+# keypoint weights and the user's fine-tuned detector must never be baked in
+# (defence in depth: HF builds from git where they are already absent, but a
+# local `docker build` would otherwise copy the on-disk weights/).
+weights/*
+!weights/style_encoder.pt

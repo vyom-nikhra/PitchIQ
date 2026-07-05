@@ -70,20 +70,30 @@ GPU detector).
 
 The repo bundles a **synthetic ground-truth harness**: an agent-based match
 simulator (formations, pressing profiles, man/zonal marking with known
-assignments) plus a broadcast renderer with a true 3D camera — so every layer
-is scored against exact truth (`scripts/validate_synthetic.py` →
-[docs/validation.md](docs/validation.md)). Highlights:
+assignments) plus a broadcast renderer with a true 3D camera. This lets us
+score two distinct things against exact truth.
+
+**(a) The analytics *maths*, on ground-truth tracking** — does the Layer-2/3
+logic recover what the simulator scripted?
 
 | What | Result vs ground truth |
 |---|---|
-| Homography (direct estimates) | **0.25 m** mean positional error |
-| Homography (all frames, incl. flow-bridged) | 0.72 m median |
-| Full pipeline (detect→track→calibrate) | 1.28 m median |
 | Possession share | 0.647 vs 0.650 true |
 | Pass detection | recall 0.93 |
 | Formations | exact recovery (incl. in/out-of-possession morphs) |
 | Who-marks-whom | **10/10 pairs** recovered |
 | Man vs zonal separation | 0.81 (man) vs 0.67 (press-heavy zonal) |
+
+**(b) Calibration accuracy** (the crux): 0.25 m mean on direct estimates,
+0.72 m median across all frames including flow-bridged ones.
+
+**(c) The *full CV pipeline* end-to-end** — detection → tracking →
+calibration → analytics run on the rendered video, no ground-truth shortcuts
+(`scripts/validate_synthetic.py` → [docs/validation.md](docs/validation.md)).
+This is deliberately sobering and honest: calibration holds (0.32 m median),
+but CV noise (imperfect detection, ball tracking) degrades downstream event
+metrics (possession frame-agreement ~0.37, pass recall ~0.17). The gap
+between (a) and (c) *is* the perception error budget, shown rather than hidden.
 
 The calibration method is the interesting part: line-family hypothesis search
 + **projective conic constructions** (circle tangency points, penalty-arc

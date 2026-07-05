@@ -20,9 +20,11 @@ data/downloads/
 *.pt
 *.pth
 *.onnx
-weights/
-# exception: the style encoder is trained on our own simulations (licence-clean,
-# ~350 KB) and is required by the deployed demo
+# exclude weight CONTENTS (not the dir itself — a negation cannot re-include
+# from inside an excluded directory), then re-include the one shippable model:
+# the style encoder is trained on our own simulations (licence-clean, ~350 KB)
+# and is required by the deployed demo
+weights/*
 !weights/style_encoder.pt
 
 # NDA-RESTRICTED DATA — SoccerNet content must NEVER be committed or

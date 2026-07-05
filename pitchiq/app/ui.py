@@ -12,6 +12,7 @@ Run:  streamlit run pitchiq/app/ui.py
 
 from __future__ import annotations
 
+import os
 import threading
 import time
 import uuid
@@ -30,6 +31,17 @@ load_env()
 st.set_page_config(page_title="PitchIQ", page_icon="⚽", layout="wide")
 
 CFG = load_config()
+
+# On a hosted Space (free CPU tier, no trained weights baked in) uploads run
+# the fallback stack slowly, so cap the processed length. Set
+# PITCHIQ_UPLOAD_MAX_FRAMES to override; on Hugging Face (SPACE_ID present) a
+# conservative default keeps the demo responsive.
+ON_SPACE = bool(os.environ.get("SPACE_ID"))
+_env_cap = os.environ.get("PITCHIQ_UPLOAD_MAX_FRAMES")
+UPLOAD_MAX_FRAMES = int(_env_cap) if _env_cap else (400 if ON_SPACE else None)
+HAS_TRAINED_DETECTOR = CFG.detection.weights and Path(CFG.detection.weights).exists()
+HAS_KEYPOINTS = bool(CFG.calibration.keypoint_weights) and Path(
+    CFG.calibration.keypoint_weights or "").exists()
 JOBS_ROOT = Path(CFG.app.artifacts_root)
 DEMO_ROOT = Path(CFG.app.demo_root)
 JOBS_ROOT.mkdir(parents=True, exist_ok=True)
@@ -97,11 +109,16 @@ def start_processing(video_bytes: bytes, filename: str) -> str:
     store.input_video.write_bytes(video_bytes)
     store.update_status("queued", 0.0, "queued", state="queued")
 
+    overrides = {}
+    if UPLOAD_MAX_FRAMES:
+        overrides["video"] = {"max_frames": UPLOAD_MAX_FRAMES}
+
     def run() -> None:
         from pitchiq.pipeline.full import FullPipeline
 
         try:
-            FullPipeline(load_config()).process_video(store.input_video, store)
+            FullPipeline(load_config(overrides=overrides)).process_video(
+                store.input_video, store)
         except Exception:
             pass  # status.json carries the error
 
@@ -134,10 +151,28 @@ choice = st.sidebar.selectbox(
 
 st.sidebar.divider()
 up = st.sidebar.file_uploader("Analyse a new clip", type=["mp4", "mov", "mkv"])
+# be honest about what an upload will (and won't) do in this environment
+if ON_SPACE or not (HAS_TRAINED_DETECTOR and HAS_KEYPOINTS):
+    _bits = []
+    if not HAS_TRAINED_DETECTOR:
+        _bits.append("COCO-fallback detector (no fine-tuned football weights here)")
+    if not HAS_KEYPOINTS:
+        _bits.append("line/conic calibration only (no keypoint model — real "
+                     "footage may not calibrate)")
+    if UPLOAD_MAX_FRAMES:
+        _bits.append(f"processing capped at {UPLOAD_MAX_FRAMES} frames on this "
+                     "CPU tier")
+    st.sidebar.info(
+        "Uploads here run a **reduced/fallback stack**: "
+        + "; ".join(_bits)
+        + ". For the full trained-model result (fine-tuned detector + pitch-"
+        "keypoint calibration) run `scripts/process_clip.py` locally — see the "
+        "README.", icon="ℹ️")
 if up is not None and st.sidebar.button("🚀 Process clip"):
     jid = start_processing(up.getvalue(), up.name)
-    st.sidebar.success(f"Job {jid} started — this runs the full CV pipeline "
-                       "and can take several minutes per minute of video on CPU.")
+    cap_note = (f" (first {UPLOAD_MAX_FRAMES} frames)" if UPLOAD_MAX_FRAMES else "")
+    st.sidebar.success(f"Job {jid} started{cap_note}. CPU processing is slow "
+                       "(~1 fps); watch the progress above and hit Refresh.")
     time.sleep(1)
     st.rerun()
 

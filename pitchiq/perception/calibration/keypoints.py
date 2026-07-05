@@ -68,28 +68,32 @@ class KeypointCalibrator:
 
     INPUT_SIZE = (480, 272)  # (w, h) — both divisible by 8 for the U-Net skips
 
-    def __init__(self, pitch: Pitch, weights_path: str, min_conf: float = 0.35) -> None:
+    def __init__(self, pitch: Pitch, weights_path: str, min_conf: float = 0.35,
+                 device: str = "auto") -> None:
         import torch
 
         self.torch = torch
         self.pitch = pitch
         self.min_conf = min_conf
         self.names, self.world = pitch.keypoint_array()
+        if device == "auto":
+            device = "cuda" if torch.cuda.is_available() else "cpu"
+        self.device = device
         try:  # torchscript export preferred; state_dict accepted
-            self.model = torch.jit.load(weights_path, map_location="cpu").eval()
+            self.model = torch.jit.load(weights_path, map_location=device).eval()
         except RuntimeError:
             self.model = build_keypoint_net(len(self.names))
-            self.model.load_state_dict(torch.load(weights_path, map_location="cpu"))
-            self.model.eval()
-        log.info("keypoint calibrator loaded: %s", weights_path)
+            self.model.load_state_dict(torch.load(weights_path, map_location=device))
+            self.model.eval().to(device)
+        log.info("keypoint calibrator loaded: %s (device=%s)", weights_path, device)
 
     def detect_keypoints(self, frame_bgr: np.ndarray) -> dict[str, tuple[float, float, float]]:
         """name -> (x_px, y_px, confidence) at original frame resolution."""
         h0, w0 = frame_bgr.shape[:2]
         img = cv2.resize(frame_bgr, self.INPUT_SIZE)[:, :, ::-1].astype(np.float32) / 255.0
-        t = self.torch.from_numpy(img.transpose(2, 0, 1)[None].copy())
+        t = self.torch.from_numpy(img.transpose(2, 0, 1)[None].copy()).to(self.device)
         with self.torch.no_grad():
-            heat = self.torch.sigmoid(self.model(t))[0].numpy()  # (K, h/4, w/4)
+            heat = self.torch.sigmoid(self.model(t))[0].cpu().numpy()  # (K, h/2, w/2)
         out = {}
         hh, hw = heat.shape[1:]
         for k, name in enumerate(self.names):

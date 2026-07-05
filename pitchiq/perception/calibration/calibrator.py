@@ -111,22 +111,36 @@ class PitchCalibrator:
     def _full_estimate(self, frame_bgr: np.ndarray):
         """Returns (H, reproj_error_px, method, score) or None.
 
-        Sparse-evidence hypotheses (few matched lines, no conic) must clear a
-        higher score floor: with only ~4 intersections a wrong template
-        assignment can still cover the few visible mask lines, and a single
-        accepted mis-calibration would poison the smoothed solution.
+        Two calibration sources, tried in order:
+
+        1. **Keypoint model** (when configured). Its own gates — ≥6 confident
+           detections, majority-inlier RANSAC consensus, and a plausibility
+           check — are the acceptance criterion. We deliberately do NOT
+           re-gate on white-line mask coverage: on worn/occluded real
+           markings a correct keypoint homography can score low, and rejecting
+           it there forced the expensive line search on every frame (a ~50x
+           slowdown observed on real footage). The confidence score fed to the
+           smoother is derived from inlier count.
+        2. **Line/conic search** — the fallback used when no keypoint model is
+           configured, or when the keypoint model declines (e.g. the synthetic
+           renderer, which it was not trained on). Sparse-evidence hypotheses
+           must clear a higher score floor so a wrong template assignment
+           cannot poison the smoothed solution.
         """
         if self.keypoints is not None:
             got = self.keypoints.estimate(frame_bgr)
             if got is not None:
                 H, err, n_inl = got
-                # keypoint solves face the same pixel-evidence standard as
-                # line hypotheses: the projected template must land on (and
-                # explain) the white-line mask
-                self.lines.prepare_frame(frame_bgr)
-                score = self.lines.score_homography(H)
-                if score >= self.cfg.min_line_score:
-                    return H, err, "keypoints", score
+                score = min(1.0, 0.4 + 0.05 * n_inl)  # inlier-based confidence
+                return H, err, "keypoints", score
+            # Keypoints declined. Propagate via flow rather than run the
+            # combinatorial line search per frame: on real footage that search
+            # is ~3 s/frame (hoardings, crowd edges spawn many segments) and
+            # usually fails on the same structure-poor views keypoints reject.
+            # The line/conic search is the primary path ONLY when no keypoint
+            # model is configured (e.g. the synthetic renderer it isn't trained on).
+            return None
+
         hint = self.smoother.current
         hyp = self.lines.estimate(frame_bgr, hint_H=hint)
         if hyp is None:

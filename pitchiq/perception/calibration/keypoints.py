@@ -125,8 +125,13 @@ class KeypointCalibrator:
             return None
         img_pts = np.array([[v[0], v[1]] for v in kps.values()])
         world_pts = np.array([self.pitch.keypoints[n] for n in kps])
-        ransac_px = max(4.0, 0.008 * w0)
-        H, inliers = cv2.findHomography(img_pts, world_pts, cv2.RANSAC, ransac_px)
+        # findHomography maps image px -> world METRES, so the RANSAC threshold
+        # is in metres, not pixels: a correct keypoint should reproject within
+        # ~2 m of its true pitch location. (The previous 0.008*width value was
+        # a ~15 m tolerance at 1080p — so loose that outlier keypoints passed as
+        # inliers and the resulting homography had hundreds of px of image
+        # error, which the downstream reproj gate then rejected.)
+        H, inliers = cv2.findHomography(img_pts, world_pts, cv2.RANSAC, 2.0)
         if H is None or inliers is None:
             return None
         inl = inliers.ravel() == 1

@@ -131,6 +131,8 @@ tracking, jersey OCR at low resolution — are catalogued in
 - [docs/architecture.md](docs/architecture.md) — layers, artifacts, module map
 - [docs/calibration.md](docs/calibration.md) — the crux, measured
 - [docs/limitations.md](docs/limitations.md) — the honest gap list (read this)
+- [docs/roadmap.md](docs/roadmap.md) — prioritised improvements (embedding team
+  ID, TrackNet ball tracker, pose, off-screen imputation, tracking robustness)
 - [docs/training.md](docs/training.md) — style encoder (CPU) · YOLO fine-tune
   (local GPU/Kaggle) · pitch keypoints (local GPU, NDA data)
 - [docs/data_sources.md](docs/data_sources.md) — licensing, SoccerNet NDA rules,

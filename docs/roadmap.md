@@ -46,15 +46,17 @@ continuous full-pitch positions from discrete broadcast data. Until then,
 these metrics carry a visible-players caveat. *Medium effort; document
 regardless.*
 
-## Tracking robustness backlog
+## Tracking robustness
 
-- **No pitch-space max-speed association gate.** The tracker associates in
-  pixel space (IoU + Kalman constant-velocity), which soft-discourages but
-  does not forbid physically impossible jumps; only the analytics kinematics
-  layer hard-clamps speeds > 11 m/s. Adding a metre-space velocity gate
-  (reject any association implying > ~11 m/s of real-pitch motion, using the
-  per-frame homography) would reject identity teleports at the source.
-- **No cross-cut re-identification.** On a scene cut the tracker resets and
+- ✅ **Pitch-space max-speed association gate** (landed). The tracker now
+  rejects any (track, detection) association whose implied real-pitch speed
+  exceeds `tracking.max_assoc_speed_mps` (12.5 m/s), measured from the track's
+  last *observed* foot point through the per-frame homography — so identity
+  teleports are refused at association time, not just masked later by the
+  analytics kinematics clamp. No-op on frames without a homography.
+
+### Backlog
+- **No cross-cut re-identification** *(next up)*. On a scene cut the tracker resets and
   assigns fresh IDs — each camera shot is tracked independently, with no
   identity carried across the cut. Proper continuity would match post-cut
   detections to pre-cut tracks via appearance embedding + last-known pitch

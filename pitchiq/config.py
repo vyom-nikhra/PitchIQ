@@ -70,6 +70,10 @@ class TrackingConfig(BaseModel):
     min_track_len: int = 5
     appearance: AppearanceConfig = Field(default_factory=AppearanceConfig)
     camera_motion_compensation: bool = True
+    # reject any association implying more real-pitch motion than a player can
+    # physically make (slightly above the ~11 m/s sprint cap to allow for
+    # calibration noise); gate applies only when a homography is available
+    max_assoc_speed_mps: float = 12.5
 
 
 class TeamsConfig(BaseModel):

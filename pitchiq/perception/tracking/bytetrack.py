@@ -151,6 +151,8 @@ class ByteTracker:
         self.tracked: list[STrack] = []
         self.lost: list[STrack] = []
         self.frame_id = -1
+        self._H = None
+        self._dt = None
         STrack.reset_ids()
 
     def _cost(self, tracks: list[STrack], dets: list[Detection], use_appearance: bool) -> np.ndarray:
@@ -172,18 +174,62 @@ class ByteTracker:
                 # appearance only refines plausible spatial matches
                 app_cost = np.where(cost < 0.95, app_cost, 1.0)
                 cost = (1 - w) * cost + w * app_cost
+        cost = self._apply_velocity_gate(cost, tracks, dets)
         return cost.astype(np.float32)
 
+    def _apply_velocity_gate(self, cost, tracks, dets):
+        """Set impossible (track, det) pairs to a rejecting cost using the
+        pitch-space implied speed. No-op without a homography."""
+        H = getattr(self, "_H", None)
+        if H is None or not getattr(self, "_dt", None):
+            return cost
+        from pitchiq.core.geometry import apply_homography
+
+        max_v = self.cfg.max_assoc_speed_mps
+        det_foot = np.array([[(d.bbox[0] + d.bbox[2]) / 2.0, d.bbox[3]] for d in dets])
+        trk_foot = np.array([getattr(t, "_gate_foot", ((t.bbox[0] + t.bbox[2]) / 2.0, t.bbox[3]))
+                             for t in tracks])
+        dp = apply_homography(H, det_foot)          # (D, 2) pitch metres
+        tp = apply_homography(H, trk_foot)          # (T, 2)
+        if not (np.all(np.isfinite(dp)) and np.all(np.isfinite(tp))):
+            return cost
+        dist = np.linalg.norm(tp[:, None, :] - dp[None, :, :], axis=2)  # (T, D) metres
+        dt_eff = np.array([max(getattr(t, "_gate_dt", self._dt) or self._dt, self._dt)
+                           for t in tracks])[:, None]
+        speed = dist / np.maximum(dt_eff, 1e-6)
+        # allow a small slack for calibration jitter near the boundary
+        cost = cost.copy()
+        cost[speed > max_v] = 1e5
+        return cost
+
     def update(
-        self, detections: list[Detection], camera_affine: np.ndarray | None = None
+        self, detections: list[Detection], camera_affine: np.ndarray | None = None,
+        homography: np.ndarray | None = None, dt: float | None = None,
     ) -> list[STrack]:
-        """Advance one frame; returns currently tracked (active) tracks."""
+        """Advance one frame; returns currently tracked (active) tracks.
+
+        ``homography`` (pixel→pitch) and ``dt`` (seconds/frame) enable the
+        physical-plausibility gate: an association is rejected outright when it
+        would require the entity to cover more real-pitch distance than a
+        player can (``cfg.max_assoc_speed_mps``), measured from the track's
+        last *observed* foot point to the candidate detection. This stops
+        identity teleports at the source rather than only masking them later
+        in the analytics kinematics. The gate is skipped when no homography is
+        available for the frame (falls back to pixel IoU + Kalman).
+        """
         self.frame_id += 1
+        self._H = homography
+        self._dt = dt
         dets = [d for d in detections if d.cls != EntityClass.BALL]
         high = [d for d in dets if d.conf >= self.cfg.high_thresh]
         low = [d for d in dets if self.cfg.low_thresh <= d.conf < self.cfg.high_thresh]
 
         for t in self.tracked + self.lost:
+            # snapshot the last observed foot point + age BEFORE prediction so
+            # the velocity gate measures real displacement over real elapsed time
+            x1, y1, x2, y2 = t.bbox
+            t._gate_foot = ((x1 + x2) / 2.0, y2)
+            t._gate_dt = (t.frames_since_update + 1) * (dt or 0.0)
             t.predict()
             if camera_affine is not None:
                 t.apply_camera_motion(camera_affine)

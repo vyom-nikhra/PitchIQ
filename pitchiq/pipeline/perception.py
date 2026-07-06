@@ -86,6 +86,7 @@ class PerceptionPipeline:
             video_path, self.cfg.video.target_fps, self.cfg.video.max_frames
         )
         n_est = max(reader.n_frames_estimate, 1)
+        frame_dt = 1.0 / max(reader.fps, 1e-6)
         rows: list[dict] = []
         hrecs: list[dict] = []
         cls_votes: dict[int, dict[EntityClass, float]] = defaultdict(lambda: defaultdict(float))
@@ -107,7 +108,9 @@ class PerceptionPipeline:
                 self.camera_motion.reset()
                 A = None
 
-            tracks = self.tracker.update(person_dets, camera_affine=None if calib.is_scene_cut else A)
+            tracks = self.tracker.update(
+                person_dets, camera_affine=None if calib.is_scene_cut else A,
+                homography=calib.H, dt=frame_dt)
 
             # ball: prefer the TrackNet heatmap tracker when configured, else the
             # YOLO+Kalman selector. Both yield (x_px, y_px, ground_y_px, conf).

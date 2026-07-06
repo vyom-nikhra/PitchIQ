@@ -133,7 +133,20 @@ class KeypointCalibrator:
         n_inl = int(inl.sum())
         if n_inl < max(5, int(np.ceil(0.5 * len(kps)))):
             return None
-        if not plausible_homography(H, w0, h0, self.pitch):
+        # Degeneracy guard for keypoint solves: check the metre-per-pixel scale
+        # AT THE INLIER KEYPOINTS, not at the extrapolated image corners. A
+        # homography fit to keypoints clustered in one part of a strong-
+        # perspective view is correct where the players are but extrapolates
+        # the far corners nonsensically (self-intersecting quad), which the
+        # corner-based plausibility gate wrongly rejects. Here we only require
+        # the scale to be sane where we actually have evidence.
+        from pitchiq.core.geometry import apply_homography
+
+        ip = img_pts[inl]
+        s0 = apply_homography(H, ip)
+        s1 = apply_homography(H, ip + [50.0, 0.0])
+        spans = np.linalg.norm(s1 - s0, axis=1)  # metres per 50 px at each kp
+        if not np.all(np.isfinite(spans)) or spans.min() < 0.1 or spans.max() > 40.0:
             return None
         try:
             back = cv2.perspectiveTransform(

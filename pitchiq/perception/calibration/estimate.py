@@ -92,8 +92,15 @@ def plausible_homography(H: np.ndarray, w_img: int, h_img: int, pitch: Pitch) ->
     A collapsed H (whole image → a point neighbourhood on the template)
     maximises naive coverage/explanation scores, so these gates run first:
     the image-corner quad must map to a simple, consistently oriented polygon
-    of believable area, and the local metre-per-pixel scale must be believable
-    and consistent across the frame.
+    of believable area, and the local metre-per-pixel scale must be believable.
+
+    The scale *ratio* across the frame is deliberately lenient: a real wide
+    tactical/broadcast camera has strong near-to-far perspective (near/far
+    metre-per-pixel ratios of 10-20 are normal), so a tight ratio gate — fine
+    for the synthetic renderer's gentle perspective — falsely rejected correct
+    real-footage homographies that RANSAC had fit with a large keypoint
+    consensus. Collapses are still caught by the absolute span floor and the
+    quad simplicity/orientation/area checks.
     """
     corners = np.array([[0, 0], [w_img, 0], [w_img, h_img], [0, h_img]], dtype=float)
     quad = apply_homography(H, corners)
@@ -117,7 +124,7 @@ def plausible_homography(H: np.ndarray, w_img: int, h_img: int, pitch: Pitch) ->
     spans = np.linalg.norm(p1 - p0, axis=1)
     if not np.all(np.isfinite(spans)):
         return False
-    if spans.min() < 0.3 or spans.max() > 40.0 or spans.max() / max(spans.min(), 1e-9) > 8.0:
+    if spans.min() < 0.25 or spans.max() > 60.0 or spans.max() / max(spans.min(), 1e-9) > 25.0:
         return False
     return True
 

@@ -43,6 +43,8 @@ def main() -> None:
     ap.add_argument("--device", default="cpu", help="cpu | cuda")
     ap.add_argument("--imgsz", type=int, default=1280)
     ap.add_argument("--jersey", action="store_true", help="enable jersey OCR")
+    ap.add_argument("--teams", choices=["kmeans_lab", "embed"], default=None,
+                    help="team assignment method (embed = learned crop embeddings)")
     ap.add_argument("--max-frames", type=int, default=None)
     ap.add_argument("--target-fps", type=float, default=25.0)
     args = ap.parse_args()
@@ -73,6 +75,8 @@ def main() -> None:
     }
     if args.keypoints:
         overrides["calibration"] = {"keypoint_weights": args.keypoints}
+    if args.teams:
+        overrides["teams"] = {"method": args.teams}
     cfg = load_config(overrides=overrides)
 
     log.info("processing %s -> %s (detector=%s, keypoints=%s, device=%s)",

@@ -72,6 +72,7 @@ class TrackingConfig(BaseModel):
 
 class TeamsConfig(BaseModel):
     method: Literal["kmeans_lab", "embed"] = "kmeans_lab"
+    embed_backend: Literal["auto", "siglip", "cnn", "none"] = "auto"
     torso_top: float = 0.12
     torso_bottom: float = 0.52
     torso_inset: float = 0.22

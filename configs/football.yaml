@@ -13,6 +13,10 @@ calibration:
   method: auto
   keypoint_weights: weights/pitch_keypoints.pt      # scripts/train_pitch_keypoints.py
 
+teams:
+  method: embed          # learned crop embeddings — separates near-identical kits
+  embed_backend: auto    # siglip (best, needs transformers) -> cnn -> colour fallback
+
 jersey:
   enabled: true
   backend: easyocr

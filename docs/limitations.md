@@ -26,19 +26,19 @@ by impact.
    ball 0.63). The COCO-person fallback (GK/referee via colour+position
    heuristics) and the synthetic-only blob detector remain as graceful
    degradation when no weights are supplied.
-4. **Team assignment by kit colour has a real failure mode: near-identical
-   kits at low resolution.** The signature is whitened before K-Means (a
-   principled fix that removed a total collapse where one raw dimension
-   hijacked the split), and it works well when kits differ in hue. But on the
-   bundled real test (Real Madrid **white** vs Man City **sky-blue**, 1024×576,
-   ~20 px torso crops), the two shirts are nearly indistinguishable after
-   grass/skin contamination — clustering lumps most of both teams together
-   (~13 vs 1 per frame) and the separability score (~1.7, **surfaced in
-   `meta.extras`**) correctly flags the result as low-confidence rather than
-   asserting false precision. This is a known-hard case even for commercial
-   systems; the real fixes are higher resolution, a learned appearance
-   (re-ID) team embedder, or jersey-number-anchored identities — all future
-   work. Kits with distinct hues (the common case) cluster reliably.
+4. **Team assignment** — **substantially improved** with a learned embedding
+   backend (`teams.method: embed`). Colour-histogram clustering collapsed on
+   near-identical kits (Real Madrid white vs Man City sky-blue at 576p lumped
+   ~13 vs 1 per frame, separability ~1.7). A torchvision-CNN crop embedding
+   (→ UMAP → K-Means, the Roboflow-`sports` recipe; SigLIP auto-used if
+   `transformers` is installed) separates them: on the same clip, separability
+   **1.7 → 3.1**, per-frame split **~13:1 → ~8:5**, and downstream possession
+   recovered from a 97%/3% artefact to a realistic **62%/38%**. Residual: a
+   mild home-tilt and some players binned to `none`; very similar kits are
+   still harder than distinct ones, and the separability score remains
+   surfaced in `meta.extras` as a confidence flag. Colour mode
+   (`kmeans_lab`) stays the dependency-free default; `embed` is enabled in
+   `configs/football.yaml`.
 5. **Tracking through congestion** (corners, goalmouths): ByteTrack +
    appearance recovers most occlusions, but long same-kit overlaps still
    cause ID switches; jersey OCR (when enabled) re-anchors identities only

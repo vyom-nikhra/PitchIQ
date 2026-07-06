@@ -102,6 +102,13 @@ class TeamAssigner:
         self.cfg = cfg
         self._samples: dict[int, list[np.ndarray]] = {}
         self._crops_rgbmean: dict[int, list[np.ndarray]] = {}
+        self._embeds: dict[int, list[np.ndarray]] = {}
+        self.embedder = None
+        if getattr(cfg, "method", "kmeans_lab") == "embed":
+            from pitchiq.perception.teams.embedder import create_team_embedder
+
+            self.embedder = create_team_embedder(
+                getattr(cfg, "embed_backend", "auto"))
 
     def add_sample(self, track_id: int, frame_bgr: np.ndarray, bbox: np.ndarray) -> None:
         crop = torso_crop(frame_bgr, bbox, self.cfg)
@@ -112,8 +119,38 @@ class TeamAssigner:
             return
         self._samples.setdefault(track_id, []).append(sig)
         self._crops_rgbmean.setdefault(track_id, []).append(
-            crop.reshape(-1, 3).mean(axis=0)[::-1]  # BGR->RGB
+            crop.reshape(-1, 3).mean(axis=0)[::-1]  # BGR->RGB, for viz kit hex
         )
+        if self.embedder is not None:
+            vec = self.embedder.embed(crop)
+            if vec is not None:
+                self._embeds.setdefault(track_id, []).append(vec)
+
+    @staticmethod
+    def _maybe_umap(usable: dict[int, np.ndarray], notes: list[str]) -> dict[int, np.ndarray]:
+        """Reduce high-dim embeddings to a compact space before K-Means.
+
+        UMAP (if installed) captures the two-team manifold better than raw
+        distances on hundreds of dims; PCA is the fallback. Reduction is
+        skipped for tiny populations where it would be unstable.
+        """
+        ids = list(usable)
+        X = np.stack([usable[i] for i in ids])
+        if X.shape[1] <= 16:
+            return usable
+        try:
+            import umap  # type: ignore
+
+            n = min(15, len(ids) - 1)
+            Z = umap.UMAP(n_neighbors=n, n_components=8, min_dist=0.0,
+                          metric="cosine", random_state=0).fit_transform(X)
+            notes.append("UMAP-reduced embeddings")
+        except Exception:
+            from sklearn.decomposition import PCA
+
+            Z = PCA(n_components=min(8, X.shape[0] - 1), random_state=0).fit_transform(X)
+            notes.append("PCA-reduced embeddings")
+        return {i: Z[k] for k, i in enumerate(ids)}
 
     # ------------------------------------------------------------------ fit
     def finalize(
@@ -128,14 +165,26 @@ class TeamAssigner:
         calibration) — used for GK team assignment and referee heuristics.
         """
         notes: list[str] = []
+        # Prefer learned crop embeddings when they were collected: they
+        # separate near-identical-tone kits that colour statistics cannot.
+        use_embed = self.embedder is not None and len(self._embeds) >= 4
+        source = self._embeds if use_embed else self._samples
+        if use_embed:
+            notes.append(f"team clustering on {self.embedder.name} embeddings")
+
         usable = {
-            tid: np.median(np.stack(sigs), axis=0)
-            for tid, sigs in self._samples.items()
-            if len(sigs) >= self.cfg.min_samples_per_track
+            tid: np.median(np.stack(vecs), axis=0)
+            for tid, vecs in source.items()
+            if len(vecs) >= self.cfg.min_samples_per_track
         }
-        for tid, sigs in self._samples.items():  # short tracks: use what we have
-            if tid not in usable and sigs:
-                usable[tid] = np.median(np.stack(sigs), axis=0)
+        for tid, vecs in source.items():  # short tracks: use what we have
+            if tid not in usable and vecs:
+                usable[tid] = np.median(np.stack(vecs), axis=0)
+
+        # optional UMAP reduction of high-dim embeddings before clustering
+        # (mirrors the Roboflow-sports SigLIP→UMAP→K-Means recipe)
+        if use_embed and len(usable) >= 8:
+            usable = self._maybe_umap(usable, notes)
 
         team_of: dict[int, Team] = {}
         cls_override: dict[int, EntityClass] = {}

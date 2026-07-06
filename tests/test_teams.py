@@ -91,6 +91,40 @@ def test_team_assigner_balanced_clusters():
     assert white_teams != blue_teams
 
 
+def test_embed_backend_optional_and_graceful():
+    """The embed backend loads a CNN when available and clusters on it; if the
+    embedder can't init, the assigner still works via colour fallback."""
+    from pitchiq.perception.teams.embedder import create_team_embedder
+
+    emb = create_team_embedder("cnn")
+    if emb is None:  # torchvision missing in this env — nothing to test
+        return
+    import numpy as np
+
+    v = emb.embed((np.random.default_rng(0).random((60, 40, 3)) * 255).astype(np.uint8))
+    assert v is not None and abs(float(np.linalg.norm(v)) - 1.0) < 1e-4
+
+    cfg = TeamsConfig(method="embed", embed_backend="cnn", min_samples_per_track=2)
+    assigner = TeamAssigner(cfg)
+    assert assigner.embedder is not None
+    track_classes = {}
+    for t in range(6):
+        for kit, base in ((0, WHITE_KIT), (1, SKYBLUE_KIT)):
+            tid = t + kit * 100
+            track_classes[tid] = EntityClass.PLAYER
+            for s in range(3):
+                frame, bbox = _player_frame(base, seed=t * 7 + s + kit * 50)
+                assigner.add_sample(tid, frame, bbox)
+    res = assigner.finalize(track_classes,
+                            {t: 30.0 for t in range(6)} | {100 + t: 75.0 for t in range(6)},
+                            105.0)
+    assert any("embedding" in n for n in res.notes)
+    from pitchiq.core.types import Team
+
+    teamed = [v for v in res.team_of_track.values() if v in (Team.HOME, Team.AWAY)]
+    assert len(set(teamed)) == 2  # both teams represented
+
+
 def test_tiny_boxes_rejected():
     """Boxes below the torso-height floor must contribute no sample."""
     cfg = TeamsConfig(min_torso_height_px=22)

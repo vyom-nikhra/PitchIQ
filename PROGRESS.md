@@ -51,10 +51,15 @@ Kinematics · possession (0.647 vs 0.650 GT) · heatmaps/territory · formations
 - ✅ Deployment fix: `git lfs migrate` had left demo parquets as pointer stubs in the working tree (local app read them as corrupt) → `git lfs pull` restored; LFS content intact in remote so GitHub/HF unaffected. HF Space verified RUNNING/public.
 - 🔄 Remaining (mechanical): final synthetic validation numbers → README table · docker smoke · key rotation reminder · push all fixes to HF Space
 
+## Phase 7 — Improvements from peer survey (see docs/roadmap.md)
+- ✅ **#1 Embedding team assignment** (`teams.method: embed`): torchvision-CNN crop embeddings → UMAP → K-Means (Roboflow-sports recipe; SigLIP auto if transformers present). Fixes near-identical-kit collapse: separability 1.7→3.1, per-frame ~13:1→~8:5, possession 97/3→62/38 on the real RMA-vs-City clip.
+- ✅ **#2 TrackNet ball tracker**: heatmap regression over 3 frames (`perception/detection/tracknet.py`), integrated w/ fallback; synthetic-validated 97% det / 1.6px. Training supports synthetic + SoccerNet-tracking real GT.
+- 📝 #3 pose (ViTPose), #4 off-screen imputation, tracking robustness (pitch-space max-speed gate, cross-cut re-ID), UI/UX — documented in docs/roadmap.md
+- 🔄 SoccerNet demo clip extraction (tracking test split downloading)
+
 ## Phase 6 — Stretch
 - ✅ RT-DETR vs YOLO benchmark harness (`train_detector.py --benchmark`)
-- 🔧 Detector fine-tune (Roboflow key ready; local RTX 3050 or Kaggle)
-- 🔧 Pitch-keypoint training (SoccerNet download + local GPU)
+- ✅ Detector fine-tuned (Kaggle) · pitch-keypoint model trained (local) · style encoder + ball tracker trained
 - ⬜ Team-style fingerprint · off-ball run valuation · jersey OCR end-to-end demo
 
 ## Operational notes

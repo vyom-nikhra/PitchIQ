@@ -55,6 +55,18 @@ class PerceptionPipeline:
         self.embedder = create_embedder(cfg.tracking.appearance)
         self.tracker = ByteTracker(cfg.tracking)
         self.ball = BallSelector(cfg.detection.ball, detector=self.detector)
+        # optional TrackNet heatmap ball tracker (falls back to BallSelector)
+        self.tracknet = None
+        if cfg.detection.ball.tracknet_weights:
+            try:
+                from pitchiq.perception.detection.tracknet import TrackNetBall
+
+                self.tracknet = TrackNetBall(
+                    cfg.detection.ball.tracknet_weights,
+                    device=cfg.detection.device,
+                    peak_threshold=cfg.detection.ball.tracknet_threshold)
+            except Exception as exc:
+                log.warning("TrackNet unavailable (%s); using YOLO+Kalman ball", exc)
         self.calibrator = PitchCalibrator(cfg.calibration, self.pitch)
         self.camera_motion = (
             CameraMotionEstimator() if cfg.tracking.camera_motion_compensation else None
@@ -96,7 +108,21 @@ class PerceptionPipeline:
                 A = None
 
             tracks = self.tracker.update(person_dets, camera_affine=None if calib.is_scene_cut else A)
-            ball_det = self.ball.select(frame, dets)
+
+            # ball: prefer the TrackNet heatmap tracker when configured, else the
+            # YOLO+Kalman selector. Both yield (x_px, y_px, ground_y_px, conf).
+            ball_xy = None
+            if self.tracknet is not None:
+                if calib.is_scene_cut:
+                    self.tracknet.reset()
+                bt = self.tracknet.detect(frame)
+                if bt is not None:
+                    ball_xy = (bt[0], bt[1], bt[1], bt[2])  # ball centre on ground plane
+            else:
+                ball_det = self.ball.select(frame, dets)
+                if ball_det is not None:
+                    bx, by = ball_det.center
+                    ball_xy = (bx, by, float(ball_det.bbox[3]), float(ball_det.conf))
 
             H = calib.H
             for t in tracks:
@@ -125,17 +151,17 @@ class PerceptionPipeline:
                         if read is not None:
                             self.jersey_votes.add(t.track_id, read[0], read[1])
 
-            if ball_det is not None:
-                bx, by = ball_det.center
+            if ball_xy is not None:
+                bx, by, ground_y, bconf = ball_xy
                 px, py = (np.nan, np.nan)
                 if H is not None:
-                    proj = apply_homography(H, [[bx, ball_det.bbox[3]]])[0]
+                    proj = apply_homography(H, [[bx, ground_y]])[0]
                     if np.all(np.isfinite(proj)) and self.pitch.contains(proj[0], proj[1], margin=6.0):
                         px, py = float(proj[0]), float(proj[1])
                 rows.append(
                     dict(frame=idx, timestamp=ts, entity_id=BALL_ID, cls=EntityClass.BALL,
                          x_pixel=float(bx), y_pixel=float(by), x_pitch=px, y_pitch=py,
-                         conf=float(ball_det.conf))
+                         conf=float(bconf))
                 )
 
             hrecs.append(

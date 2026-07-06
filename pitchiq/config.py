@@ -38,6 +38,8 @@ class BallConfig(BaseModel):
     roi_size: int = 640
     conf_threshold: float = 0.15
     max_gap_interpolate: int = 25
+    tracknet_weights: Optional[str] = None  # TrackNet heatmap ball tracker (optional)
+    tracknet_threshold: float = 0.5
 
 
 class DetectionConfig(BaseModel):

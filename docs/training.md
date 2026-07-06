@@ -1,7 +1,7 @@
 # Training guide
 
-Three trainable components, in ascending order of hardware needs. All
-training is optional — every consumer has a documented fallback.
+Trainable components, in ascending order of hardware needs. All training is
+optional — every consumer has a documented fallback.
 
 ## 1. Style encoder (contrastive, 6.1b) — CPU, minutes
 
@@ -51,6 +51,30 @@ weights/pitch_keypoints.pt` — the calibrator then prefers keypoints and
 falls back to lines/conics automatically. This is the fix for box-only
 views. Weights derived from NDA data stay out of the public repo by default
 (see `docs/data_sources.md`).
+
+## 4. TrackNet ball tracker — GPU, minutes (synthetic) / longer (real)
+
+The ball is the weakest perception target; a TrackNet-style model regresses a
+ball probability heatmap from 3 consecutive frames, localising it through
+blur/occlusion where box detectors miss (see `docs/roadmap.md`).
+
+```bash
+# synthetic domain (licence-clean, from the renderer) — validates end-to-end
+python scripts/train_ball_tracker.py --matches 4 --epochs 20
+
+# real broadcast domain (what actually helps live footage)
+python scripts/download_data.py --soccernet tracking          # ~20 GB, NDA
+python scripts/train_ball_tracker.py --source soccernet \
+    --data-dir data/soccernet/tracking/train --epochs 30
+```
+
+Set `detection.ball.tracknet_weights: weights/ball_tracknet.pt` to use it; the
+pipeline falls back to the YOLO+Kalman ball selector when unset. Validated on
+synthetic renders at **97% detection / 1.6 px median**. Like the keypoint
+model, a synthetic-trained model is for the synthetic domain — real broadcast
+needs the SoccerNet-trained variant (NDA; keep weights out of the public
+repo). An airborne ball still projects incorrectly through the ground-plane
+homography (inherent single-camera limitation).
 
 ## Experiment tracking
 

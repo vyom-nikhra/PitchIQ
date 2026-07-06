@@ -5,24 +5,28 @@ Prioritised improvements, informed by a survey of peer systems (Roboflow
 tracking literature). Items 1–2 are **in progress**; 3–4 and the tracking
 items are **documented weaknesses / planned work**.
 
-## In progress
+## Landed
 
-### 1. Embedding-based team assignment  *(fixes a real failure)*
-Colour-histogram clustering collapses on near-identical-tone kits at low
-resolution (measured: Real Madrid white vs Man City sky-blue at 576p lumped
-~13 vs 1 per frame). Peer systems (Roboflow `sports`) solve this with a
-learned image embedding — **SigLIP crop embeddings → UMAP → K-Means** — which
-separates teams that colour statistics can't. Implemented as the `embed`
-backend of `TeamAssigner`, tiered SigLIP → torchvision-CNN → colour fallback.
+### 1. Embedding-based team assignment  ✅  *(fixed a real failure)*
+Colour-histogram clustering collapsed on near-identical-tone kits (Real
+Madrid white vs Man City sky-blue at 576p, ~13 vs 1 per frame). Now the
+`embed` backend of `TeamAssigner` embeds player crops with a learned image
+model — **torchvision CNN → UMAP → K-Means** (the Roboflow-`sports` recipe;
+SigLIP auto-used when `transformers` is installed), tiered SigLIP → CNN →
+colour fallback. Measured on the real clip: separability **1.7 → 3.1**,
+per-frame split **~13:1 → ~8:5**, possession **97/3 → 62/38**. Enabled in
+`configs/football.yaml`.
 
-### 2. TrackNet-style ball tracker  *(fixes our weakest link)*
+### 2. TrackNet-style ball tracker  ✅  *(infrastructure + synthetic-validated)*
 The ball is the least reliable component (small, fast, motion-blurred,
-occluded). Detection-based tracking (YOLO + Kalman + ROI) fundamentally
-struggles here. The field standard is **TrackNet** (Huang et al. 2019) and
-successors (V4 motion-attention, TOTNet occlusion-aware): regress a ball
-**probability heatmap from 3+ consecutive frames**, learning the trajectory
-pattern instead of detecting a box. Reported ~97% recall on exactly the
-blurry/tiny/afterimage cases that break box detectors.
+occluded); detection-based tracking (YOLO + Kalman + ROI) struggles. Now a
+**TrackNet-style model regresses a ball heatmap from 3 consecutive frames**
+(`perception/detection/tracknet.py`), integrated behind the ball interface
+with fallback to the YOLO+Kalman selector. Validated end-to-end on synthetic
+renders at **97% detection / 1.6 px median**. Training script
+(`scripts/train_ball_tracker.py`) supports both the licence-clean synthetic
+renderer and real SoccerNet-tracking ball GT — a real-broadcast ball tracker
+needs the latter (NDA download), exactly like the keypoint model.
 
 ## Planned (documented weaknesses)
 

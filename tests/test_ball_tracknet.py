@@ -48,3 +48,70 @@ def test_peak_decode_subpixel():
     assert abs(y - 20.6 / 72 * 144) < 3
     # below-threshold heatmap returns None
     assert bt._peak(np.zeros((72, 128), np.float32), 256, 144) is None
+
+
+def test_training_heatmap_has_exact_peak():
+    """The focal loss defines positives as target == 1.0 exactly; a Gaussian
+    at a fractional centre never reaches 1.0, so the training target must
+    stamp the rounded peak pixel — otherwise the model collapses to zeros."""
+    from pitchiq.perception.detection.ball_dataset import gaussian_heatmap as gh
+
+    hm = gh(72, 128, cx=50.4, cy=20.6, sigma=3.0)
+    assert (hm == 1.0).sum() == 1
+    iy, ix = np.unravel_index(int(hm.argmax()), hm.shape)
+    assert (ix, iy) == (50, 21)
+
+
+def test_focal_loss_prefers_correct_heatmap():
+    torch = pytest.importorskip("torch")
+    from pitchiq.perception.detection.ball_dataset import (
+        focal_heatmap_loss,
+        gaussian_heatmap as gh,
+    )
+
+    target = torch.from_numpy(gh(36, 64, cx=20.0, cy=10.0, sigma=3.0))[None, None]
+    logit_good = (target * 12.0) - 6.0          # sigmoid ~= target
+    logit_flat = torch.full_like(target, -6.0)  # all-background prediction
+    good = focal_heatmap_loss(logit_good, target)
+    flat = focal_heatmap_loss(logit_flat, target)
+    assert float(good) < float(flat)
+    assert float(good) < 1.0
+
+
+def test_ball_window_dataset_end_to_end(tmp_path):
+    """Windows listed from a fake MOT sequence produce correct tensors."""
+    torch = pytest.importorskip("torch")
+    cv2 = pytest.importorskip("cv2")
+    from pitchiq.perception.detection.ball_dataset import (
+        BallWindowDataset,
+        list_ball_windows,
+    )
+
+    seq = tmp_path / "SNMOT-000"
+    (seq / "img1").mkdir(parents=True)
+    (seq / "gt").mkdir()
+    for i in range(1, 6):
+        cv2.imwrite(str(seq / "img1" / f"{i:06d}.jpg"),
+                    np.full((90, 160, 3), 60, np.uint8))
+    # MOT rows: frame,id,x,y,w,h,conf,cls,vis — id 9 tiny box = the ball
+    rows = []
+    for f in range(1, 6):
+        rows.append(f"{f},1,10,10,12,30,1,1,1")          # a player
+        rows.append(f"{f},9,{40 + f},45,4,4,1,1,1")       # the ball
+    (seq / "gt" / "gt.txt").write_text("\n".join(rows))
+
+    wins = list_ball_windows(seq)
+    assert len(wins) == 3  # frames 3..5 as window ends
+    paths, frac = wins[0]
+    assert len(paths) == 3 and frac is not None
+    assert 0.0 < frac[0] < 1.0 and 0.0 < frac[1] < 1.0
+
+    ds = BallWindowDataset(wins, input_size=(64, 36))
+    stack, heat, has, px = ds[0]
+    assert stack.shape == (9, 36, 64)
+    assert heat.shape == (1, 36, 64)
+    assert float(has) == 1.0
+    assert float(heat.max()) == 1.0
+    # heatmap peak sits at the scaled ball pixel
+    iy, ix = np.unravel_index(int(heat[0].numpy().argmax()), (36, 64))
+    assert abs(ix - float(px[0])) <= 1 and abs(iy - float(px[1])) <= 1

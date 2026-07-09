@@ -1,27 +1,32 @@
-"""Train the TrackNet-style heatmap ball tracker.
+"""Train the TrackNet-style heatmap ball tracker — properly.
 
 Two data sources (mirrors the keypoint model's synthetic/real split):
 
-* ``--source synthetic`` (default) — render simulated matches; the renderer
-  knows the exact ball pixel every frame, so training data is unlimited and
-  licence-clean. A model trained here is for the *synthetic* domain (the
-  bundled demo), just as the synthetic renderer differs from real broadcast.
-* ``--source soccernet`` — real ball ground truth from SoccerNet tracking
-  (MOT gt.txt, class ball). This is what a real-broadcast ball tracker needs;
-  requires the SoccerNet tracking download (NDA — local only, never commit).
+* ``--source soccernet`` — real ball ground truth from SoccerNet-Tracking
+  MOT sequences. What a real-broadcast ball tracker needs. NDA: local only.
+* ``--source synthetic`` — render simulated matches; the renderer knows the
+  exact ball pixel, so data is unlimited and licence-clean (synthetic domain).
 
-The network regresses a Gaussian ball heatmap from 3 consecutive frames.
+Procedure (designed for low loss AND generalisation):
+  sequence-level train/val split -> lazy disk-backed dataset with a resize
+  cache -> augmentation -> CenterNet focal loss -> AdamW + warmup/cosine ->
+  mixed precision -> per-epoch validation (detection rate, false positives,
+  pixel error on held-out sequences) -> best checkpoint + early stopping.
+Checkpoints and a JSON log land in ``weights/ball_tracknet_train/`` so an
+interrupted run resumes with ``--resume``.
 
 Usage:
-    python scripts/train_ball_tracker.py --matches 4 --epochs 20
     python scripts/train_ball_tracker.py --source soccernet \
-        --data-dir data/soccernet/tracking/train --epochs 30
+        --data-dir data/soccernet/tracking/tracking/test --epochs 30
+    python scripts/train_ball_tracker.py --source synthetic --matches 4
 """
 
 from __future__ import annotations
 
 import argparse
+import json
 import sys
+import time
 from pathlib import Path
 
 REPO = Path(__file__).resolve().parents[1]
@@ -29,9 +34,42 @@ sys.path.insert(0, str(REPO))
 
 import numpy as np  # noqa: E402
 
+from pitchiq.perception.detection.ball_dataset import (  # noqa: E402
+    BallWindowDataset,
+    focal_heatmap_loss,
+    list_ball_windows,
+)
 
-def synthetic_windows(n_matches: int, half_minutes: float, w: int, h: int):
-    """Yield (3-frame stack float [9,H,W], ball_pixel or None) from renders."""
+
+# ------------------------------------------------------------- data sources
+def soccernet_split(data_dir: Path, n_val: int, stride: int, val_stride: int,
+                    limit_seqs: int = 0):
+    """Sequence-level split: whole clips held out for validation, spread
+    across the sorted list so val sees varied matches/conditions."""
+    seqs = sorted(d for d in data_dir.iterdir() if (d / "img1").is_dir())
+    if limit_seqs:
+        seqs = seqs[:limit_seqs]
+    if len(seqs) < 2:
+        raise SystemExit(f"need >=2 sequences under {data_dir}, found {len(seqs)}")
+    n_val = max(1, min(n_val, len(seqs) - 1))
+    step = max(1, len(seqs) // n_val)
+    val_names = {s.name for s in seqs[::step][:n_val]}
+    train_w, val_w = [], []
+    for s in seqs:
+        if s.name in val_names:
+            val_w += list_ball_windows(s, stride=val_stride)
+        else:
+            train_w += list_ball_windows(s, stride=stride)
+        print(f"  scanned {s.name} ({'val' if s.name in val_names else 'train'})",
+              flush=True)
+    print(f"train windows: {len(train_w)} | val windows: {len(val_w)} "
+          f"| val seqs: {sorted(val_names)}", flush=True)
+    return train_w, val_w
+
+
+def synthetic_split(n_matches: int, half_minutes: float):
+    """Render matches, dump frames to jpgs, return (train, val) window lists
+    in the same (paths, fraction) format — the last match is validation."""
     import cv2
 
     from pitchiq.config import load_config
@@ -41,171 +79,205 @@ def synthetic_windows(n_matches: int, half_minutes: float, w: int, h: int):
     from pitchiq.demo.simulate import simulate_demo_match
 
     tmp = REPO / "data" / "jobs" / "_ball_train"
-    tmp.mkdir(parents=True, exist_ok=True)
+    per_match: list[list] = []
     for m in range(n_matches):
         cfg = load_config(overrides={"simulator": {"half_minutes": half_minutes,
                                                    "seed": 200 + m}})
         sim = simulate_demo_match(cfg.simulator)
         vid = tmp / f"m{m}.mp4"
-        rr = render_match(sim.tracking, Pitch(), sim.meta.kit_colors, vid, cfg.simulator.fps,
-                          width=w * 2, height=h * 2)
-        ball = {int(r["frame"]): r for _, r in
-                rr.boxes[rr.boxes.entity_id == BALL_ID].iterrows()}
+        frames_dir = tmp / f"m{m}_frames"
+        frames_dir.mkdir(parents=True, exist_ok=True)
+        rw, rh = 1024, 576
+        rr = render_match(sim.tracking, Pitch(), sim.meta.kit_colors, vid,
+                          cfg.simulator.fps, width=rw, height=rh)
+        boxes = rr.boxes[rr.boxes.entity_id == BALL_ID]
+        ball = {int(r["frame"]): ((r["x1"] + r["x2"]) / 2 / rw,
+                                  (r["y1"] + r["y2"]) / 2 / rh)
+                for _, r in boxes.iterrows()}
         cap = cv2.VideoCapture(str(vid))
-        frames = []
-        fidx = -1
+        paths, fidx = [], -1
         while True:
             ok, fr = cap.read()
             if not ok:
                 break
             fidx += 1
-            small = cv2.resize(fr, (w, h))[:, :, ::-1].astype(np.float32) / 255.0
-            frames.append(small.transpose(2, 0, 1))
-            if len(frames) > 3:
-                frames.pop(0)
-            if len(frames) == 3:
-                b = ball.get(fidx)
-                px = None
-                if b is not None:
-                    cx = (b["x1"] + b["x2"]) / 2 / (w * 2) * w
-                    cy = (b["y1"] + b["y2"]) / 2 / (h * 2) * h
-                    px = (cx, cy)
-                yield np.concatenate(frames, axis=0), px
+            p = frames_dir / f"{fidx:06d}.jpg"
+            if not p.exists():
+                cv2.imwrite(str(p), fr, [int(cv2.IMWRITE_JPEG_QUALITY), 92])
+            paths.append(p)
         cap.release()
-        print(f"rendered+scanned match {m + 1}/{n_matches}", flush=True)
+        wins = [([paths[i - 2], paths[i - 1], paths[i]], ball.get(i))
+                for i in range(2, len(paths))]
+        per_match.append(wins)
+        print(f"  rendered match {m + 1}/{n_matches}: {len(wins)} windows", flush=True)
+    train = [w for ws in per_match[:-1] for w in ws] or per_match[-1]
+    val = per_match[-1]
+    return train, val
 
 
-def soccernet_windows(data_dir: str, w: int, h: int):
-    """Yield (3-frame stack, ball_pixel|None) from SoccerNet tracking sequences.
+# ---------------------------------------------------------------- validation
+def run_validation(model, loader, device: str, thresh: float) -> dict:
+    """Detection rate / false-positive rate / pixel error on held-out clips."""
+    import torch
 
-    Each sequence dir has ``img1/*.jpg`` frames and ``gt/gt.txt`` (MOT). The
-    ball is the track whose class/role marks it as the ball; SoccerNet-Tracking
-    labels the ball track, and it is by far the smallest box, which we use as a
-    robust fallback identifier. Real ball GT — the domain a broadcast ball
-    tracker actually needs.
-    """
-    import cv2
-    import pandas as pd
-
-    root = Path(data_dir)
-    seqs = [d for d in sorted(root.iterdir()) if (d / "img1").exists()]
-    if not seqs:
-        raise SystemExit(f"no SoccerNet tracking sequences under {data_dir}")
-    for seq in seqs:
-        gt_path = seq / "gt" / "gt.txt"
-        if not gt_path.exists():
-            continue
-        cols = ["frame", "id", "x", "y", "w", "h", "conf", "cls", "vis"]
-        gt = pd.read_csv(gt_path, header=None,
-                         names=cols[: len(pd.read_csv(gt_path, header=None, nrows=1).columns)])
-        gt["area"] = gt["w"] * gt["h"]
-        # ball = the consistently-smallest-area track across the sequence
-        med_area = gt.groupby("id")["area"].median()
-        ball_id = int(med_area.idxmin())
-        ball = gt[gt.id == ball_id].set_index("frame")
-        imgs = sorted((seq / "img1").glob("*.jpg"))
-        frames: list[np.ndarray] = []
-        for ip in imgs:
-            fnum = int(ip.stem)
-            fr = cv2.imread(str(ip))
-            H0, W0 = fr.shape[:2]
-            small = cv2.resize(fr, (w, h))[:, :, ::-1].astype(np.float32) / 255.0
-            frames.append(small.transpose(2, 0, 1))
-            if len(frames) > 3:
-                frames.pop(0)
-            if len(frames) == 3:
-                px = None
-                if fnum in ball.index:
-                    r = ball.loc[fnum]
-                    px = (float(r.x + r.w / 2) / W0 * w, float(r.y + r.h / 2) / H0 * h)
-                yield np.concatenate(frames, axis=0), px
-        print(f"scanned sequence {seq.name}", flush=True)
+    model.eval()
+    n_pos = n_neg = det = fp = 0
+    errs: list[float] = []
+    with torch.no_grad():
+        for xb, _, has, px in loader:
+            xb = xb.to(device, non_blocking=True)
+            with torch.autocast(device_type="cuda", enabled=device == "cuda"):
+                prob = torch.sigmoid(model(xb))[:, 0]
+            B, _, Ww = prob.shape
+            flat = prob.reshape(B, -1).float()
+            peak, arg = flat.max(dim=1)
+            iy, ix = (arg // Ww).float(), (arg % Ww).float()
+            for b in range(B):
+                if float(has[b]) > 0.5:
+                    n_pos += 1
+                    if float(peak[b]) >= thresh:
+                        det += 1
+                        errs.append(float(np.hypot(float(ix[b]) - float(px[b, 0]),
+                                                   float(iy[b]) - float(px[b, 1]))))
+                else:
+                    n_neg += 1
+                    if float(peak[b]) >= thresh:
+                        fp += 1
+    det_rate = det / max(n_pos, 1)
+    fp_rate = fp / max(n_neg, 1)
+    med = float(np.median(errs)) if errs else float("nan")
+    p90 = float(np.percentile(errs, 90)) if errs else float("nan")
+    # composite used for best-model selection: find the ball, don't invent
+    # one, and be close (error term saturates at 20 px so it can't dominate)
+    score = det_rate - fp_rate - (min(med, 20.0) / 200.0 if errs else 0.1)
+    return dict(det_rate=det_rate, fp_rate=fp_rate, med_err_px=med,
+                p90_err_px=p90, n_pos=n_pos, n_neg=n_neg, score=score)
 
 
+# ---------------------------------------------------------------------- main
 def main() -> None:
     ap = argparse.ArgumentParser()
-    ap.add_argument("--source", choices=["synthetic", "soccernet"], default="synthetic")
-    ap.add_argument("--data-dir", default=None, help="SoccerNet tracking split dir")
-    ap.add_argument("--matches", type=int, default=4)
-    ap.add_argument("--half-minutes", type=float, default=0.5)
-    ap.add_argument("--epochs", type=int, default=20)
+    ap.add_argument("--source", choices=["soccernet", "synthetic"], default="soccernet")
+    ap.add_argument("--data-dir", default="data/soccernet/tracking/tracking/test")
+    ap.add_argument("--matches", type=int, default=4, help="synthetic only")
+    ap.add_argument("--half-minutes", type=float, default=0.5, help="synthetic only")
+    ap.add_argument("--epochs", type=int, default=30)
     ap.add_argument("--batch", type=int, default=8)
-    ap.add_argument("--max-windows", type=int, default=1600,
-                    help="cap on stored training windows (keeps RAM bounded)")
+    ap.add_argument("--lr", type=float, default=1e-3)
+    ap.add_argument("--workers", type=int, default=2)
+    ap.add_argument("--stride", type=int, default=2,
+                    help="train window stride (2 halves near-duplicate frames)")
+    ap.add_argument("--val-stride", type=int, default=5)
+    ap.add_argument("--val-seqs", type=int, default=6)
+    ap.add_argument("--limit-seqs", type=int, default=0, help="smoke runs")
+    ap.add_argument("--thresh", type=float, default=0.35)
+    ap.add_argument("--patience", type=int, default=8,
+                    help="early-stop after this many epochs without val improvement")
     ap.add_argument("--out", default="weights/ball_tracknet.pt")
+    ap.add_argument("--resume", action="store_true")
     args = ap.parse_args()
 
     import torch
-    import torch.nn.functional as F
+    from torch.utils.data import DataLoader
 
-    from pitchiq.perception.detection.tracknet import build_tracknet, gaussian_heatmap, TrackNetBall
+    from pitchiq.perception.detection.tracknet import TrackNetBall, build_tracknet
 
-    W, H = TrackNetBall.INPUT_SIZE
-    hh, hw = H, W
+    input_size = TrackNetBall.INPUT_SIZE  # (w, h)
+    run_dir = REPO / "weights" / "ball_tracknet_train"
+    run_dir.mkdir(parents=True, exist_ok=True)
+    last_ckpt = run_dir / "last.ckpt"
+    log_path = run_dir / "log.json"
 
-    print("collecting training windows...")
-    # store frames as uint8 (4x lighter than float32) + just the ball pixel;
-    # heatmap targets are generated per-batch to keep RAM bounded
-    stacks_u8: list[np.ndarray] = []
-    ball_px: list[tuple | None] = []
-    if args.source == "synthetic":
-        gen = synthetic_windows(args.matches, args.half_minutes, W, H)
+    print("building window lists...", flush=True)
+    if args.source == "soccernet":
+        cache = REPO / "data" / "soccernet" / "cache_ball_512x288"
+        train_w, val_w = soccernet_split(REPO / args.data_dir, args.val_seqs,
+                                         args.stride, args.val_stride,
+                                         args.limit_seqs)
     else:
-        if not args.data_dir:
-            raise SystemExit("--source soccernet needs --data-dir <tracking split>")
-        gen = soccernet_windows(args.data_dir, W, H)
-    # reservoir-style subsample to keep at most --max-windows in RAM
-    seen = 0
-    keep_rng = np.random.default_rng(1)
-    for stack, px in gen:
-        seen += 1
-        if len(stacks_u8) < args.max_windows:
-            stacks_u8.append((stack * 255).astype(np.uint8))
-            ball_px.append(px)
-        else:
-            j = int(keep_rng.integers(0, seen))
-            if j < args.max_windows:
-                stacks_u8[j] = (stack * 255).astype(np.uint8)
-                ball_px[j] = px
-    n = len(stacks_u8)
-    n_ball = sum(p is not None for p in ball_px)
-    print(f"{n} windows ({n_ball} with a visible ball)")
+        cache = None
+        train_w, val_w = synthetic_split(args.matches, args.half_minutes)
+
+    train_ds = BallWindowDataset(train_w, input_size, augment=True, cache_dir=cache)
+    val_ds = BallWindowDataset(val_w, input_size, augment=False, cache_dir=cache)
+    pin = torch.cuda.is_available()
+    train_dl = DataLoader(train_ds, batch_size=args.batch, shuffle=True,
+                          num_workers=args.workers, pin_memory=pin,
+                          persistent_workers=args.workers > 0, drop_last=True)
+    val_dl = DataLoader(val_ds, batch_size=args.batch, shuffle=False,
+                        num_workers=args.workers, pin_memory=pin,
+                        persistent_workers=args.workers > 0)
 
     device = "cuda" if torch.cuda.is_available() else "cpu"
     model = build_tracknet(3).to(device)
-    opt = torch.optim.Adam(model.parameters(), lr=1e-3)
-    rng = np.random.default_rng(0)
+    opt = torch.optim.AdamW(model.parameters(), lr=args.lr, weight_decay=1e-4)
+    total_iters = max(1, len(train_dl) * args.epochs)
+    warmup = min(500, total_iters // 20 + 1)
 
-    def make_batch(idx):
-        xb = torch.from_numpy(
-            np.stack([stacks_u8[i] for i in idx]).astype(np.float32) / 255.0).to(device)
-        yb = torch.from_numpy(np.stack([
-            gaussian_heatmap(hh, hw, *ball_px[i], sigma=3.0) if ball_px[i] is not None
-            else np.zeros((hh, hw), np.float32) for i in idx])[:, None]).to(device)
-        return xb, yb
+    def lr_lambda(it: int) -> float:  # linear warmup then cosine to 1% of lr
+        if it < warmup:
+            return (it + 1) / warmup
+        t = (it - warmup) / max(1, total_iters - warmup)
+        return 0.01 + 0.99 * 0.5 * (1 + np.cos(np.pi * t))
 
-    for ep in range(args.epochs):
-        perm = rng.permutation(n)
-        losses = []
-        model.train()
-        for i in range(0, n, args.batch):
-            idx = perm[i: i + args.batch]
-            xb, yb = make_batch(idx)
-            pred = model(xb)
-            # weighted BCE — the ball is a tiny positive region
-            loss = F.binary_cross_entropy_with_logits(
-                pred, yb, pos_weight=torch.tensor(200.0, device=device))
-            opt.zero_grad()
-            loss.backward()
-            opt.step()
-            losses.append(float(loss.detach()))
-        print(f"epoch {ep + 1}/{args.epochs}: loss {np.mean(losses):.4f}", flush=True)
+    sched = torch.optim.lr_scheduler.LambdaLR(opt, lr_lambda)
+    scaler = torch.amp.GradScaler(enabled=device == "cuda")
 
-    out = Path(args.out)
+    start_ep, best_score, since_best, history = 0, -1e9, 0, []
+    if args.resume and last_ckpt.exists():
+        ck = torch.load(last_ckpt, map_location=device)
+        model.load_state_dict(ck["model"])
+        opt.load_state_dict(ck["opt"])
+        sched.load_state_dict(ck["sched"])
+        start_ep = ck["epoch"] + 1
+        best_score = ck["best_score"]
+        history = ck.get("history", [])
+        print(f"resumed from epoch {start_ep} (best score {best_score:.3f})", flush=True)
+
+    out = REPO / args.out
     out.parent.mkdir(parents=True, exist_ok=True)
-    model.eval().cpu()
-    torch.jit.trace(model, torch.zeros(1, 9, H, W)).save(str(out))
-    print(f"saved {out} — set detection.ball.tracknet_weights to use it.", flush=True)
+    for ep in range(start_ep, args.epochs):
+        model.train()
+        t0, losses = time.time(), []
+        for xb, yb, _, _ in train_dl:
+            xb = xb.to(device, non_blocking=True)
+            yb = yb.to(device, non_blocking=True)
+            with torch.autocast(device_type="cuda", enabled=device == "cuda"):
+                loss = focal_heatmap_loss(model(xb), yb)
+            opt.zero_grad(set_to_none=True)
+            scaler.scale(loss).backward()
+            scaler.unscale_(opt)
+            torch.nn.utils.clip_grad_norm_(model.parameters(), 1.0)
+            scaler.step(opt)
+            scaler.update()
+            sched.step()
+            losses.append(float(loss.detach()))
+        metrics = run_validation(model, val_dl, device, args.thresh)
+        history.append(dict(epoch=ep, loss=float(np.mean(losses)), **metrics))
+        print(f"epoch {ep + 1}/{args.epochs}: loss {np.mean(losses):.4f} | "
+              f"val det {metrics['det_rate']:.2%} fp {metrics['fp_rate']:.2%} "
+              f"med {metrics['med_err_px']:.1f}px p90 {metrics['p90_err_px']:.1f}px "
+              f"score {metrics['score']:.3f} | {time.time() - t0:.0f}s", flush=True)
+
+        torch.save(dict(model=model.state_dict(), opt=opt.state_dict(),
+                        sched=sched.state_dict(), epoch=ep,
+                        best_score=best_score, history=history), last_ckpt)
+        log_path.write_text(json.dumps(history, indent=1))
+        if metrics["score"] > best_score:
+            best_score, since_best = metrics["score"], 0
+            model.eval().cpu()
+            torch.jit.trace(model, torch.zeros(1, 9, input_size[1], input_size[0])
+                            ).save(str(out))
+            model.to(device)
+            print(f"  new best -> {out}", flush=True)
+        else:
+            since_best += 1
+            if since_best >= args.patience:
+                print(f"early stop: no val improvement in {args.patience} epochs",
+                      flush=True)
+                break
+
+    print(f"done. best val score {best_score:.3f}; weights at {out}", flush=True)
 
 
 if __name__ == "__main__":

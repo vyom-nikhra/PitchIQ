@@ -208,9 +208,11 @@ def main() -> None:
     train_dl = DataLoader(train_ds, batch_size=args.batch, shuffle=True,
                           num_workers=args.workers, pin_memory=pin,
                           persistent_workers=args.workers > 0, drop_last=True)
+    # validation loads in-process: a second persistent worker pool means
+    # another N full torch processes (~0.5 GB each) resident for the whole
+    # run — enough to OOM an 8 GB machine. Val is small and cache-backed.
     val_dl = DataLoader(val_ds, batch_size=args.batch, shuffle=False,
-                        num_workers=args.workers, pin_memory=pin,
-                        persistent_workers=args.workers > 0)
+                        num_workers=0, pin_memory=pin)
 
     device = "cuda" if torch.cuda.is_available() else "cpu"
     model = build_tracknet(3).to(device)

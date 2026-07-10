@@ -43,6 +43,8 @@ def main() -> None:
     ap.add_argument("--device", default="cpu", help="cpu | cuda")
     ap.add_argument("--imgsz", type=int, default=1280)
     ap.add_argument("--jersey", action="store_true", help="enable jersey OCR")
+    ap.add_argument("--ball-tracknet", default=None,
+                    help="TrackNet ball weights (.pt); omit for YOLO+Kalman ball")
     ap.add_argument("--teams", choices=["kmeans_lab", "embed"], default=None,
                     help="team assignment method (embed = learned crop embeddings)")
     ap.add_argument("--max-frames", type=int, default=None)
@@ -68,6 +70,8 @@ def main() -> None:
     detection: dict = {"imgsz": args.imgsz, "device": args.device}
     if args.detector:
         detection.update(backend="yolo", weights=args.detector)
+    if args.ball_tracknet:
+        detection["ball"] = {"tracknet_weights": args.ball_tracknet}
     overrides: dict = {
         "detection": detection,
         "jersey": {"enabled": bool(args.jersey)},

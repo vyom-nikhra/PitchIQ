@@ -17,16 +17,20 @@ colour fallback. Measured on the real clip: separability **1.7 → 3.1**,
 per-frame split **~13:1 → ~8:5**, possession **97/3 → 62/38**. Enabled in
 `configs/football.yaml`.
 
-### 2. TrackNet-style ball tracker  ✅  *(infrastructure + synthetic-validated)*
+### 2. TrackNet-style ball tracker  ✅  *(trained on real footage)*
 The ball is the least reliable component (small, fast, motion-blurred,
 occluded); detection-based tracking (YOLO + Kalman + ROI) struggles. Now a
 **TrackNet-style model regresses a ball heatmap from 3 consecutive frames**
 (`perception/detection/tracknet.py`), integrated behind the ball interface
-with fallback to the YOLO+Kalman selector. Validated end-to-end on synthetic
-renders at **97% detection / 1.6 px median**. Training script
-(`scripts/train_ball_tracker.py`) supports both the licence-clean synthetic
-renderer and real SoccerNet-tracking ball GT — a real-broadcast ball tracker
-needs the latter (NDA download), exactly like the keypoint model.
+with fallback to the YOLO+Kalman selector. Synthetic domain: **97% / 1.6 px**.
+Real domain, trained on SoccerNet-tracking ball GT (NDA-local) with the full
+procedure in `scripts/train_ball_tracker.py` (lazy disk dataset, sequence-
+level split, focal loss, bf16, augmentation, best-checkpoint/early-stop):
+**52% detection / 0% false positives / 0.9 px median on held-out clips**;
+demo-clip ball coverage 37% → 95% of frames including airborne balls.
+Detection rate is honest-hard: the ball is genuinely occluded/invisible in a
+large fraction of broadcast frames. Next lift: more training sequences (the
+full 106-seq corpus roughly doubles the data).
 
 ## Planned (documented weaknesses)
 

@@ -8,6 +8,10 @@ detection:
   weights: runs/detector/football/weights/best.pt   # scripts/train_detector.py
   conf_threshold: 0.3
   imgsz: 1280
+  ball:
+    # TrackNet heatmap ball tracker (scripts/train_ball_tracker.py); falls
+    # back to the YOLO+Kalman selector when the weights are absent
+    tracknet_weights: weights/ball_tracknet_real.pt
 
 calibration:
   method: auto

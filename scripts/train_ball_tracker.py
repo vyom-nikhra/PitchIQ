@@ -178,6 +178,10 @@ def main() -> None:
     ap.add_argument("--patience", type=int, default=8,
                     help="early-stop after this many epochs without val improvement")
     ap.add_argument("--out", default="weights/ball_tracknet.pt")
+    ap.add_argument("--run-dir", default="weights/ball_tracknet_train",
+                    help="checkpoint/log dir; point at persistent storage "
+                         "(e.g. /kaggle/working/...) so --resume survives a "
+                         "session death")
     ap.add_argument("--resume", action="store_true")
     args = ap.parse_args()
 
@@ -187,7 +191,7 @@ def main() -> None:
     from pitchiq.perception.detection.tracknet import TrackNetBall, build_tracknet
 
     input_size = TrackNetBall.INPUT_SIZE  # (w, h)
-    run_dir = REPO / "weights" / "ball_tracknet_train"
+    run_dir = REPO / args.run_dir  # pathlib: an absolute --run-dir wins
     run_dir.mkdir(parents=True, exist_ok=True)
     last_ckpt = run_dir / "last.ckpt"
     log_path = run_dir / "log.json"
@@ -232,7 +236,10 @@ def main() -> None:
     # BatchNorm running stats even though the skip-guard protected the
     # weights). fp16 stays as the fallback for pre-Ampere GPUs (P100/T4),
     # protected by a logit clamp + the skip-guard + the epoch health check.
-    use_bf16 = device == "cuda" and torch.cuda.is_bf16_supported()
+    # NOTE: gate on compute capability, not is_bf16_supported() — torch
+    # reports bf16 as "supported" on a T4 but emulates it without tensor
+    # cores (a Kaggle T4 epoch took 2.2 h in bf16 vs ~fp16's tens of minutes).
+    use_bf16 = device == "cuda" and torch.cuda.get_device_capability()[0] >= 8
     amp_dtype = torch.bfloat16 if use_bf16 else torch.float16
     print(f"mixed precision: {'bf16' if use_bf16 else 'fp16'}", flush=True)
     scaler = torch.amp.GradScaler(enabled=device == "cuda" and not use_bf16)

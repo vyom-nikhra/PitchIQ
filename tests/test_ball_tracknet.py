@@ -78,6 +78,29 @@ def test_focal_loss_prefers_correct_heatmap():
     assert float(good) < 1.0
 
 
+def test_focal_loss_finite_at_fp16_confidence():
+    """Regression: under autocast, confident fp16 logits saturate sigmoid to
+    exactly 1.0, and a log(1 - pred) formulation returns -inf — one such batch
+    NaN-poisoned a real training run. The logsigmoid form must stay finite for
+    arbitrarily confident predictions in half precision."""
+    torch = pytest.importorskip("torch")
+    from pitchiq.perception.detection.ball_dataset import (
+        focal_heatmap_loss,
+        gaussian_heatmap as gh,
+    )
+
+    target = torch.from_numpy(gh(36, 64, cx=20.0, cy=10.0, sigma=3.0))[None, None]
+    # fp16 logits confident enough that sigmoid(x) == 1.0 exactly in half
+    logits = torch.full_like(target, 30.0).half()
+    assert float(torch.sigmoid(logits).max()) == 1.0  # the trap is armed
+    loss = focal_heatmap_loss(logits, target)
+    assert torch.isfinite(loss)
+    # and gradients flow without NaN
+    logits32 = torch.full((1, 1, 36, 64), 30.0, requires_grad=True)
+    focal_heatmap_loss(logits32, target).backward()
+    assert torch.isfinite(logits32.grad).all()
+
+
 def test_ball_window_dataset_end_to_end(tmp_path):
     """Windows listed from a fake MOT sequence produce correct tensors."""
     torch = pytest.importorskip("torch")

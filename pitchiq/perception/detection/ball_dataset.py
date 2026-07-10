@@ -173,13 +173,25 @@ def focal_heatmap_loss(pred_logits, target, alpha: float = 2.0, beta: float = 4.
     an exact 1.0 at each ball peak. Peak pixels are positives; everything else
     is a soft negative down-weighted by ``(1 - target)^beta`` so the ring
     around the peak isn't punished as if it were background.
+
+    Computed in float32 via ``logsigmoid`` regardless of autocast: in fp16 a
+    confident sigmoid saturates to exactly 1.0 (a ``1 - 1e-6`` clamp is below
+    fp16 resolution), so ``log(1 - pred)`` hits -inf and one such batch
+    permanently poisons the weights with NaNs — observed at epoch 3 of the
+    first real run. ``logsigmoid(-x) == log(1 - sigmoid(x))`` exactly, with no
+    saturating subtraction.
     """
     import torch
+    import torch.nn.functional as F
 
-    pred = torch.sigmoid(pred_logits).clamp(1e-6, 1 - 1e-6)
+    x = pred_logits.float()
+    target = target.float()
+    pred = torch.sigmoid(x)
+    log_p = F.logsigmoid(x)       # log(sigmoid(x)), stable for any x
+    log_1mp = F.logsigmoid(-x)    # log(1 - sigmoid(x)), stable for any x
     pos = (target == 1.0).float()
     neg = 1.0 - pos
-    pos_loss = -((1 - pred) ** alpha) * torch.log(pred) * pos
-    neg_loss = -((1 - target) ** beta) * (pred ** alpha) * torch.log(1 - pred) * neg
+    pos_loss = -((1 - pred) ** alpha) * log_p * pos
+    neg_loss = -((1 - target) ** beta) * (pred ** alpha) * log_1mp * neg
     n_pos = pos.sum().clamp(min=1.0)
     return (pos_loss.sum() + neg_loss.sum()) / n_pos

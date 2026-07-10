@@ -238,12 +238,19 @@ def main() -> None:
     out.parent.mkdir(parents=True, exist_ok=True)
     for ep in range(start_ep, args.epochs):
         model.train()
-        t0, losses = time.time(), []
+        t0, losses, skipped = time.time(), [], 0
         for xb, yb, _, _ in train_dl:
             xb = xb.to(device, non_blocking=True)
             yb = yb.to(device, non_blocking=True)
             with torch.autocast(device_type="cuda", enabled=device == "cuda"):
                 loss = focal_heatmap_loss(model(xb), yb)
+            if not torch.isfinite(loss):
+                # never let a bad batch reach the weights (one NaN backward
+                # poisoned an entire run before this guard existed)
+                opt.zero_grad(set_to_none=True)
+                skipped += 1
+                sched.step()
+                continue
             opt.zero_grad(set_to_none=True)
             scaler.scale(loss).backward()
             scaler.unscale_(opt)
@@ -252,6 +259,12 @@ def main() -> None:
             scaler.update()
             sched.step()
             losses.append(float(loss.detach()))
+        if skipped:
+            print(f"  WARNING: skipped {skipped} non-finite batches", flush=True)
+        if not losses or not np.isfinite(np.mean(losses)):
+            raise RuntimeError(
+                "training diverged: epoch produced no finite losses — aborting "
+                "instead of writing a poisoned checkpoint")
         metrics = run_validation(model, val_dl, device, args.thresh)
         history.append(dict(epoch=ep, loss=float(np.mean(losses)), **metrics))
         print(f"epoch {ep + 1}/{args.epochs}: loss {np.mean(losses):.4f} | "

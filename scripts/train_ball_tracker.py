@@ -239,7 +239,9 @@ def main() -> None:
 
     start_ep, best_score, since_best, history = 0, -1e9, 0, []
     if args.resume and last_ckpt.exists():
-        ck = torch.load(last_ckpt, map_location=device)
+        # our own checkpoint (holds the history dict, not just tensors), so
+        # PyTorch 2.6's weights_only=True default must be opted out of
+        ck = torch.load(last_ckpt, map_location=device, weights_only=False)
         model.load_state_dict(ck["model"])
         opt.load_state_dict(ck["opt"])
         sched.load_state_dict(ck["sched"])

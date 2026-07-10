@@ -116,17 +116,21 @@ def synthetic_split(n_matches: int, half_minutes: float):
 
 
 # ---------------------------------------------------------------- validation
-def run_validation(model, loader, device: str, thresh: float) -> dict:
+def run_validation(model, loader, device: str, thresh: float,
+                   amp_dtype=None) -> dict:
     """Detection rate / false-positive rate / pixel error on held-out clips."""
     import torch
 
+    if amp_dtype is None:
+        amp_dtype = torch.float16
     model.eval()
     n_pos = n_neg = det = fp = 0
     errs: list[float] = []
     with torch.no_grad():
         for xb, _, has, px in loader:
             xb = xb.to(device, non_blocking=True)
-            with torch.autocast(device_type="cuda", enabled=device == "cuda"):
+            with torch.autocast(device_type="cuda", dtype=amp_dtype,
+                                enabled=device == "cuda"):
                 prob = torch.sigmoid(model(xb))[:, 0]
             B, _, Ww = prob.shape
             flat = prob.reshape(B, -1).float()
@@ -221,7 +225,15 @@ def main() -> None:
         return 0.01 + 0.99 * 0.5 * (1 + np.cos(np.pi * t))
 
     sched = torch.optim.lr_scheduler.LambdaLR(opt, lr_lambda)
-    scaler = torch.amp.GradScaler(enabled=device == "cuda")
+    # bf16 has float32-like range, so activations cannot overflow the way
+    # fp16's 65504 ceiling allows (observed: inf activations poisoned the
+    # BatchNorm running stats even though the skip-guard protected the
+    # weights). fp16 stays as the fallback for pre-Ampere GPUs (P100/T4),
+    # protected by a logit clamp + the skip-guard + the epoch health check.
+    use_bf16 = device == "cuda" and torch.cuda.is_bf16_supported()
+    amp_dtype = torch.bfloat16 if use_bf16 else torch.float16
+    print(f"mixed precision: {'bf16' if use_bf16 else 'fp16'}", flush=True)
+    scaler = torch.amp.GradScaler(enabled=device == "cuda" and not use_bf16)
 
     start_ep, best_score, since_best, history = 0, -1e9, 0, []
     if args.resume and last_ckpt.exists():
@@ -242,8 +254,11 @@ def main() -> None:
         for xb, yb, _, _ in train_dl:
             xb = xb.to(device, non_blocking=True)
             yb = yb.to(device, non_blocking=True)
-            with torch.autocast(device_type="cuda", enabled=device == "cuda"):
-                loss = focal_heatmap_loss(model(xb), yb)
+            with torch.autocast(device_type="cuda", dtype=amp_dtype,
+                                enabled=device == "cuda"):
+                # clamp turns an fp16 activation blow-up (inf logits) into a
+                # saturated-but-finite prediction instead of a poisoned batch
+                loss = focal_heatmap_loss(model(xb).clamp(-30.0, 30.0), yb)
             if not torch.isfinite(loss):
                 # never let a bad batch reach the weights (one NaN backward
                 # poisoned an entire run before this guard existed)
@@ -265,7 +280,16 @@ def main() -> None:
             raise RuntimeError(
                 "training diverged: epoch produced no finite losses — aborting "
                 "instead of writing a poisoned checkpoint")
-        metrics = run_validation(model, val_dl, device, args.thresh)
+        # health check BEFORE checkpointing: BatchNorm running stats update on
+        # every train-mode forward, so inf activations can poison the model's
+        # buffers even when the skip-guard blocks the gradient step
+        bad = [n for n, t in model.state_dict().items()
+               if not torch.isfinite(t).all()]
+        if bad:
+            raise RuntimeError(
+                f"model poisoned (non-finite tensors: {bad[:4]}...) — aborting; "
+                f"restart with --resume from the last healthy checkpoint")
+        metrics = run_validation(model, val_dl, device, args.thresh, amp_dtype)
         history.append(dict(epoch=ep, loss=float(np.mean(losses)), **metrics))
         print(f"epoch {ep + 1}/{args.epochs}: loss {np.mean(losses):.4f} | "
               f"val det {metrics['det_rate']:.2%} fp {metrics['fp_rate']:.2%} "

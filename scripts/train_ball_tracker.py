@@ -247,6 +247,7 @@ def main() -> None:
         sched.load_state_dict(ck["sched"])
         start_ep = ck["epoch"] + 1
         best_score = ck["best_score"]
+        since_best = ck.get("since_best", 0)
         history = ck.get("history", [])
         print(f"resumed from epoch {start_ep} (best score {best_score:.3f})", flush=True)
 
@@ -300,10 +301,6 @@ def main() -> None:
               f"med {metrics['med_err_px']:.1f}px p90 {metrics['p90_err_px']:.1f}px "
               f"score {metrics['score']:.3f} | {time.time() - t0:.0f}s", flush=True)
 
-        torch.save(dict(model=model.state_dict(), opt=opt.state_dict(),
-                        sched=sched.state_dict(), epoch=ep,
-                        best_score=best_score, history=history), last_ckpt)
-        log_path.write_text(json.dumps(history, indent=1))
         if metrics["score"] > best_score:
             best_score, since_best = metrics["score"], 0
             model.eval().cpu()
@@ -313,10 +310,17 @@ def main() -> None:
             print(f"  new best -> {out}", flush=True)
         else:
             since_best += 1
-            if since_best >= args.patience:
-                print(f"early stop: no val improvement in {args.patience} epochs",
-                      flush=True)
-                break
+        # checkpoint AFTER the best-score update: saving before it stored a
+        # stale best, so a resumed run treated its first epoch as a new best
+        torch.save(dict(model=model.state_dict(), opt=opt.state_dict(),
+                        sched=sched.state_dict(), epoch=ep,
+                        best_score=best_score, since_best=since_best,
+                        history=history), last_ckpt)
+        log_path.write_text(json.dumps(history, indent=1))
+        if since_best >= args.patience:
+            print(f"early stop: no val improvement in {args.patience} epochs",
+                  flush=True)
+            break
 
     print(f"done. best val score {best_score:.3f}; weights at {out}", flush=True)
 

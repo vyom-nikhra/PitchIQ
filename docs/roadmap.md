@@ -26,11 +26,19 @@ with fallback to the YOLO+Kalman selector. Synthetic domain: **97% / 1.6 px**.
 Real domain, trained on SoccerNet-tracking ball GT (NDA-local) with the full
 procedure in `scripts/train_ball_tracker.py` (lazy disk dataset, sequence-
 level split, focal loss, bf16, augmentation, best-checkpoint/early-stop):
-**52% detection / 0% false positives / 0.9 px median on held-out clips**;
 demo-clip ball coverage 37% → 95% of frames including airborne balls.
-Detection rate is honest-hard: the ball is genuinely occluded/invisible in a
-large fraction of broadcast frames. Next lift: more training sequences (the
-full 106-seq corpus roughly doubles the data).
+Head-to-head on sequences unseen by both models (SNMOT-060/070/099/109,
+threshold sweep via `scripts/eval_ball_tracker.py`): the local bf16 model
+gives **72% det / 27% fp @ 0.35, or 51% det / 8% fp @ 0.50, 0.8–0.9 px
+median** — and dominates a Kaggle model trained on 2.2× the data but in
+fp16 with overflow clamps (78%/56% @ 0.35). Lesson: training numerics beat
+data volume here. Detection rate is honest-hard: the ball is genuinely
+occluded/invisible in a large fraction of broadcast frames.
+Next lifts, in expected order of value: trajectory post-processing over the
+raw heatmap peaks (spline/Kalman with outlier rejection), hard-negative
+mining of the false-positive frames, a 5-frame input window, higher input
+resolution, and a full-length low-LR cosine tail (both runs early-stopped
+before the schedule's fine-tuning phase).
 
 ## Planned (documented weaknesses)
 

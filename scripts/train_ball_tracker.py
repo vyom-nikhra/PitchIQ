@@ -117,12 +117,14 @@ def synthetic_split(n_matches: int, half_minutes: float):
 
 # ---------------------------------------------------------------- validation
 def run_validation(model, loader, device: str, thresh: float,
-                   amp_dtype=None) -> dict:
+                   amp_dtype=None, amp_enabled: bool | None = None) -> dict:
     """Detection rate / false-positive rate / pixel error on held-out clips."""
     import torch
 
     if amp_dtype is None:
         amp_dtype = torch.float16
+    if amp_enabled is None:
+        amp_enabled = device == "cuda"
     model.eval()
     n_pos = n_neg = det = fp = 0
     errs: list[float] = []
@@ -130,7 +132,7 @@ def run_validation(model, loader, device: str, thresh: float,
         for xb, _, has, px in loader:
             xb = xb.to(device, non_blocking=True)
             with torch.autocast(device_type="cuda", dtype=amp_dtype,
-                                enabled=device == "cuda"):
+                                enabled=amp_enabled):
                 prob = torch.sigmoid(model(xb))[:, 0]
             B, _, Ww = prob.shape
             flat = prob.reshape(B, -1).float()
@@ -182,6 +184,9 @@ def main() -> None:
                     help="checkpoint/log dir; point at persistent storage "
                          "(e.g. /kaggle/working/...) so --resume survives a "
                          "session death")
+    ap.add_argument("--fp32", action="store_true",
+                    help="disable mixed precision entirely (escape hatch for "
+                         "fp16-only GPUs if overflow guards ever fall short)")
     ap.add_argument("--resume", action="store_true")
     args = ap.parse_args()
 
@@ -239,10 +244,13 @@ def main() -> None:
     # NOTE: gate on compute capability, not is_bf16_supported() — torch
     # reports bf16 as "supported" on a T4 but emulates it without tensor
     # cores (a Kaggle T4 epoch took 2.2 h in bf16 vs ~fp16's tens of minutes).
-    use_bf16 = device == "cuda" and torch.cuda.get_device_capability()[0] >= 8
+    amp_enabled = device == "cuda" and not args.fp32
+    use_bf16 = amp_enabled and torch.cuda.get_device_capability()[0] >= 8
     amp_dtype = torch.bfloat16 if use_bf16 else torch.float16
-    print(f"mixed precision: {'bf16' if use_bf16 else 'fp16'}", flush=True)
-    scaler = torch.amp.GradScaler(enabled=device == "cuda" and not use_bf16)
+    print("mixed precision:",
+          "bf16" if use_bf16 else ("fp16" if amp_enabled else "off (fp32)"),
+          flush=True)
+    scaler = torch.amp.GradScaler(enabled=amp_enabled and not use_bf16)
 
     start_ep, best_score, since_best, history = 0, -1e9, 0, []
     if args.resume and last_ckpt.exists():
@@ -267,7 +275,7 @@ def main() -> None:
             xb = xb.to(device, non_blocking=True)
             yb = yb.to(device, non_blocking=True)
             with torch.autocast(device_type="cuda", dtype=amp_dtype,
-                                enabled=device == "cuda"):
+                                enabled=amp_enabled):
                 # clamp turns an fp16 activation blow-up (inf logits) into a
                 # saturated-but-finite prediction instead of a poisoned batch
                 loss = focal_heatmap_loss(model(xb).clamp(-30.0, 30.0), yb)
@@ -301,7 +309,8 @@ def main() -> None:
             raise RuntimeError(
                 f"model poisoned (non-finite tensors: {bad[:4]}...) — aborting; "
                 f"restart with --resume from the last healthy checkpoint")
-        metrics = run_validation(model, val_dl, device, args.thresh, amp_dtype)
+        metrics = run_validation(model, val_dl, device, args.thresh,
+                                 amp_dtype, amp_enabled)
         history.append(dict(epoch=ep, loss=float(np.mean(losses)), **metrics))
         print(f"epoch {ep + 1}/{args.epochs}: loss {np.mean(losses):.4f} | "
               f"val det {metrics['det_rate']:.2%} fp {metrics['fp_rate']:.2%} "

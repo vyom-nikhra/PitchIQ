@@ -50,6 +50,38 @@ def test_peak_decode_subpixel():
     assert bt._peak(np.zeros((72, 128), np.float32), 256, 144) is None
 
 
+def test_safe_convs_block_fp16_overflow_and_keep_state_dict_keys():
+    """Regression: on fp16-only GPUs (Kaggle T4), pre-BatchNorm activations
+    grew past fp16's 65504 ceiling and the infs poisoned BN running stats on
+    the very forward pass that produced them. Every conv output is clamped in
+    fp16; the subclasses must not change checkpoint keys, and fp32 behaviour
+    must be untouched."""
+    torch = pytest.importorskip("torch")
+    from pitchiq.perception.detection.tracknet import build_tracknet
+
+    model = build_tracknet(in_frames=3)
+    # 1) state_dict keys identical to the original plain-module layout
+    keys = set(model.state_dict().keys())
+    assert "e1.0.0.weight" in keys and "up3.weight" in keys and "head.weight" in keys
+
+    # 2) engineered blow-up: huge first-layer weights so conv outputs exceed
+    #    the fp16 max; in fp16 the clamp must keep everything finite
+    conv = model.e1[0][0]
+    with torch.no_grad():
+        conv.weight.fill_(500.0)
+    x16 = torch.full((1, 9, 32, 64), 100.0, dtype=torch.float16)
+    try:
+        out16 = conv.half()(x16)
+    except (RuntimeError, NotImplementedError):
+        pytest.skip("fp16 conv unsupported on this CPU build")
+    assert torch.isfinite(out16).all()
+    assert float(out16.abs().max()) <= 30000.0
+
+    # 3) fp32 path is a no-op: values may exceed the clamp bound freely
+    out32 = conv.float()(x16.float())
+    assert float(out32.abs().max()) > 30000.0
+
+
 def test_training_heatmap_has_exact_peak():
     """The focal loss defines positives as target == 1.0 exactly; a Gaussian
     at a fractional centre never reaches 1.0, so the training target must

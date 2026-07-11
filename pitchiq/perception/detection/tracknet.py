@@ -37,11 +37,31 @@ log = logging.getLogger(__name__)
 def build_tracknet(in_frames: int = 3):
     """Small TrackNet-style encoder–decoder. Input (B, 3*in_frames, H, W) →
     (B, 1, H, W) logits."""
+    import torch
     import torch.nn as nn
+
+    # fp16 safety: layers feeding a BatchNorm are scale-invariant (BN cancels
+    # weight growth), so nothing stops their outputs drifting past fp16's
+    # 65504 ceiling during training — and BN running stats ingest the infs on
+    # the very forward pass that produces them (observed on a Kaggle T4; bf16
+    # GPUs are immune). Clamping every conv output in fp16 stops infs at the
+    # layer that would create them. Subclasses keep state_dict keys identical
+    # to the plain modules, and the clamp is a no-op in fp32/bf16.
+    _CLAMP = 30000.0
+
+    class _SafeConv2d(nn.Conv2d):
+        def forward(self, x):
+            out = super().forward(x)
+            return out.clamp(-_CLAMP, _CLAMP) if out.dtype == torch.float16 else out
+
+    class _SafeConvTranspose2d(nn.ConvTranspose2d):
+        def forward(self, x):
+            out = super().forward(x)
+            return out.clamp(-_CLAMP, _CLAMP) if out.dtype == torch.float16 else out
 
     def cbr(cin, cout):
         return nn.Sequential(
-            nn.Conv2d(cin, cout, 3, padding=1), nn.BatchNorm2d(cout), nn.ReLU(inplace=True)
+            _SafeConv2d(cin, cout, 3, padding=1), nn.BatchNorm2d(cout), nn.ReLU(inplace=True)
         )
 
     class TrackNet(nn.Module):
@@ -53,13 +73,13 @@ def build_tracknet(in_frames: int = 3):
             self.e3 = nn.Sequential(cbr(64, 128), cbr(128, 128))
             self.pool = nn.MaxPool2d(2)
             self.bott = nn.Sequential(cbr(128, 256), cbr(256, 256))
-            self.up3 = nn.ConvTranspose2d(256, 128, 2, 2)
+            self.up3 = _SafeConvTranspose2d(256, 128, 2, 2)
             self.d3 = nn.Sequential(cbr(256, 128), cbr(128, 128))
-            self.up2 = nn.ConvTranspose2d(128, 64, 2, 2)
+            self.up2 = _SafeConvTranspose2d(128, 64, 2, 2)
             self.d2 = nn.Sequential(cbr(128, 64), cbr(64, 64))
-            self.up1 = nn.ConvTranspose2d(64, 32, 2, 2)
+            self.up1 = _SafeConvTranspose2d(64, 32, 2, 2)
             self.d1 = nn.Sequential(cbr(64, 32), cbr(32, 32))
-            self.head = nn.Conv2d(32, 1, 1)
+            self.head = _SafeConv2d(32, 1, 1)
 
         def forward(self, x):
             import torch

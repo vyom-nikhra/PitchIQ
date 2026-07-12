@@ -31,6 +31,10 @@ pose:
   model: yolo11n-pose.pt # auto-downloads; degrades gracefully if unavailable
   sample_every: 10
 
+pitch_control:
+  impute_offscreen: true  # broadcast hides ~half the players; carry recent
+  impute_horizon_s: 4.0   # leavers as decaying ghosts (docs/limitations.md)
+
 embeddings:
   learned:
     enabled: auto

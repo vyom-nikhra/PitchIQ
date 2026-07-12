@@ -109,7 +109,14 @@ class AnalyticsPipeline:
         summary["formations"] = formations_mod.formation_summary(fw)
 
         tick(0.6, "pitch control")
-        mean_grid, pc_frames = pc_mod.mean_control(kin, team_of, self.cfg.pitch_control,
+        kin_pc = kin
+        if self.cfg.pitch_control.impute_offscreen:
+            kin_pc = pc_mod.impute_offscreen(
+                kin, self.cfg.pitch_control.impute_horizon_s, meta.fps)
+            summary["pitch_control_note"] = (
+                "off-screen players imputed as decaying ghosts "
+                f"(horizon {self.cfg.pitch_control.impute_horizon_s:.0f}s)")
+        mean_grid, pc_frames = pc_mod.mean_control(kin_pc, team_of, self.cfg.pitch_control,
                                                    meta.pitch_length, meta.pitch_width)
         store.save_npz(store.analytics_path("pitch_control.npz"),
                        mean_home_control=mean_grid)

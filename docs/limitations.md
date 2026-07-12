@@ -51,6 +51,14 @@ by impact.
    documented upgrade.
 8. **Pitch control is simplified Spearman** (arrival-time logistic; no ball
    flight time or control-duration integral).
+8b. **Off-screen players are only partially imputed.** Broadcast framing
+   hides ~half the outfielders at any moment; with
+   `pitch_control.impute_offscreen` on, players who *recently* left frame
+   persist as decaying ghosts (last position + settling velocity, ≤4 s), which
+   softens — but does not remove — the visible-players bias in control and
+   Voronoi. Players outside the frame longer than the horizon are genuinely
+   unknown and excluded. Full continuous-position estimation (RSOS
+   12:251175) remains the documented upgrade.
 9. **xT on a single short clip is sparse** — priors dominate; feed longer
    footage or a StatsBomb-fitted grid (`xt.grid_path`) for sharper values.
 10. **Style embeddings / roles need minutes**: under ~15–20 min of on-ball

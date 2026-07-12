@@ -58,6 +58,59 @@ def control_grid(
     return p_home.reshape(gx.shape).astype(np.float32)
 
 
+def impute_offscreen(kin: pd.DataFrame, horizon_s: float, fps: float,
+                     tau_s: float = 1.5) -> pd.DataFrame:
+    """Carry briefly-off-screen players forward as decaying "ghosts".
+
+    Broadcast framing hides ~half the outfield players at any moment, so
+    control/Voronoi computed on visible players alone systematically
+    overstate the attacking team's space (roadmap #4). Honest approximation:
+    a player who just left frame continues from their last position with
+    exponentially decaying velocity (drift settles after ~``tau_s``), then
+    holds still, for at most ``horizon_s`` — beyond that we genuinely don't
+    know where they are and stop pretending. Ghost rows carry ``ghost=True``
+    so consumers can distinguish observed from imputed.
+
+    This is NOT the full continuous-position estimation of RSOS 12:251175;
+    the remaining bias is documented in docs/limitations.md.
+    """
+    if kin.empty:
+        return kin
+    horizon_f = max(1, int(round(horizon_s * fps)))
+    ghost_rows = []
+    fmax = int(kin["frame"].max())
+    for eid, g in kin.groupby("entity_id"):
+        g = g.sort_values("frame")
+        have = g["frame"].to_numpy(dtype=int)
+        # internal gaps AND the tail after the player leaves frame for good
+        bounds = list(zip(have[:-1], have[1:])) + [(have[-1], fmax + 1)]
+        for prev_f, next_f in bounds:
+            if next_f - prev_f <= 1:
+                continue
+            row = g[g["frame"] == prev_f].iloc[0]
+            v0 = np.nan_to_num(np.array([row.get("vx", 0.0), row.get("vy", 0.0)],
+                                        dtype=float))
+            for f in range(prev_f + 1, min(prev_f + 1 + horizon_f, next_f)):
+                dt = (f - prev_f) / fps
+                decay = float(np.exp(-dt / tau_s))
+                drift = v0 * tau_s * (1.0 - decay)
+                gr = row.copy()
+                gr["frame"] = f
+                gr["x"] = float(row["x"] + drift[0])
+                gr["y"] = float(row["y"] + drift[1])
+                if "vx" in gr:
+                    gr["vx"], gr["vy"] = float(v0[0] * decay), float(v0[1] * decay)
+                gr["ghost"] = True
+                ghost_rows.append(gr)
+    if not ghost_rows:
+        out = kin.copy()
+        out["ghost"] = False
+        return out
+    out = pd.concat([kin.assign(ghost=False), pd.DataFrame(ghost_rows)],
+                    ignore_index=True)
+    return out.sort_values(["frame", "entity_id"]).reset_index(drop=True)
+
+
 def mean_control(
     kin: pd.DataFrame,
     team_of: dict[int, str],

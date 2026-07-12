@@ -164,6 +164,11 @@ class PitchControlConfig(BaseModel):
     reaction_time_s: float = 0.7
     max_speed_mps: float = 7.8
     kappa: float = 0.45
+    # roadmap #4: recently-off-screen players persist as decaying ghosts so
+    # control isn't computed on visible players only (honest approximation —
+    # see docs/limitations.md); off by default, on for broadcast footage
+    impute_offscreen: bool = False
+    impute_horizon_s: float = 4.0
 
 
 class PassesConfig(BaseModel):

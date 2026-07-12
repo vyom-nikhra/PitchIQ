@@ -59,6 +59,10 @@ class ArtifactStore:
         return self.root / "homography.parquet"
 
     @property
+    def pose_path(self) -> Path:
+        return self.root / "pose.parquet"
+
+    @property
     def events_path(self) -> Path:
         return self.root / "events.parquet"
 

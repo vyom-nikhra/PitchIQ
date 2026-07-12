@@ -78,6 +78,13 @@ class PerceptionPipeline:
         self.teams = TeamAssigner(cfg.teams)
         self.jersey_reader = create_jersey_reader(cfg.jersey)
         self.jersey_votes = JerseyVoter(cfg.jersey)
+        self.pose = None
+        if cfg.pose.enabled:
+            from pitchiq.perception.pose import PoseSampler
+
+            sampler = PoseSampler(cfg.pose.model, cfg.detection.device,
+                                  cfg.pose.min_kp_conf)
+            self.pose = sampler if sampler.ok else None
 
     # ----------------------------------------------------------------- run
     def run(
@@ -171,6 +178,9 @@ class PerceptionPipeline:
                          conf=float(bconf))
                 )
 
+            if self.pose is not None and idx % self.cfg.pose.sample_every == 0:
+                self.pose.sample(frame, tracks)
+
             hrecs.append(
                 dict(frame=idx, timestamp=ts, H=H, reproj_error_px=calib.reproj_error_px,
                      method=calib.method, is_scene_cut=calib.is_scene_cut)
@@ -188,6 +198,11 @@ class PerceptionPipeline:
         store.save_tracking(df)
         store.save_homography(hdf)
         store.save_meta(meta)
+        if self.pose is not None:
+            pose_df = self.pose.finalize()
+            if len(pose_df):
+                pose_df.to_parquet(store.pose_path, index=False)
+                log.info("pose descriptors for %d tracks", len(pose_df))
         if progress_cb:
             progress_cb(1.0, "perception complete")
         return df, hdf, meta

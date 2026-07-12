@@ -26,6 +26,11 @@ jersey:
   enabled: true
   backend: easyocr
 
+pose:
+  enabled: true          # body-shape descriptors -> style embeddings
+  model: yolo11n-pose.pt # auto-downloads; degrades gracefully if unavailable
+  sample_every: 10
+
 embeddings:
   learned:
     enabled: auto

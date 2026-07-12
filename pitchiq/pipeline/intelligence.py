@@ -59,6 +59,25 @@ class IntelligencePipeline:
             meta, self.cfg.embeddings, movement_profiles, press,
             min_minutes=self.cfg.roles.min_minutes,
         )
+        # optional pose descriptors from the Layer-1 pass: appended as their
+        # own feature group so body carriage informs roles/similarity, and
+        # absent-pose players align to zeros automatically in flat()
+        if store.pose_path.exists():
+            pose_df = pd.read_parquet(store.pose_path).set_index("entity_id")
+            pose_cols = [c for c in pose_df.columns if c != "n_samples"]
+            n_with = 0
+            for eid, pf in features.items():
+                if eid in pose_df.index:
+                    row = pose_df.loc[eid]
+                    pf.groups["pose"] = {c: float(row[c]) for c in pose_cols}
+                    n_with += 1
+            if n_with:
+                # flat() derives column names from the FIRST player, so every
+                # player needs the group (zeros = "no pose evidence")
+                for pf in features.values():
+                    pf.groups.setdefault("pose", {c: 0.0 for c in pose_cols})
+            log.info("pose features attached for %d/%d players", n_with, len(features))
+
         features_to_frame(features).to_parquet(
             store.intelligence_path("features.parquet"), index=False)
 

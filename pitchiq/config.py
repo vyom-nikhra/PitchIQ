@@ -96,6 +96,15 @@ class TeamsConfig(BaseModel):
     min_non_grass_px: int = 40     # min non-grass pixels required in a torso crop
 
 
+class PoseConfig(BaseModel):
+    """Optional pose sampling during the Layer-1 pass (perception/pose.py):
+    body-shape descriptors feed the Layer-3 style embeddings."""
+    enabled: bool = False
+    model: str = "yolo11n-pose.pt"  # ultralytics; auto-downloads (~6 MB)
+    sample_every: int = 10           # frames between pose passes
+    min_kp_conf: float = 0.3
+
+
 class JerseyConfig(BaseModel):
     enabled: bool = True
     backend: Literal["auto", "easyocr", "none"] = "auto"
@@ -250,6 +259,7 @@ class Config(BaseModel):
     tracking: TrackingConfig = Field(default_factory=TrackingConfig)
     teams: TeamsConfig = Field(default_factory=TeamsConfig)
     jersey: JerseyConfig = Field(default_factory=JerseyConfig)
+    pose: PoseConfig = Field(default_factory=PoseConfig)
     calibration: CalibrationConfig = Field(default_factory=CalibrationConfig)
     possession: PossessionConfig = Field(default_factory=PossessionConfig)
     kinematics: KinematicsConfig = Field(default_factory=KinematicsConfig)

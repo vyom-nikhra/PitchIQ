@@ -58,8 +58,17 @@ Kinematics · possession (0.647 vs 0.650 GT) · heatmaps/territory · formations
 - ✅ **Model selection settled by common-unseen eval** (`scripts/eval_ball_tracker.py`, 4 train-split sequences unseen by both candidates, threshold sweep): local bf16 model **72% det / 27% fp @ 0.35; 51% / 8% @ 0.50; ~0.8 px median** — strictly dominates the user's Kaggle model trained on 2.2× data but in fp16 with overflow clamps (78%/56% @ 0.35; 58%/32% @ 0.50). Honest lesson recorded: numerics (bf16) beat data volume; the fp16 conv clamp that stops T4 BatchNorm poisoning costs accuracy. Product stays on the local model.
 - ✅ **Training-infra bugs found the hard way** (all fixed + tested + pushed): fp16 focal-loss saturation → NaN (logsigmoid fp32 form); fp16 activation overflow poisoning BatchNorm buffers via train-mode forwards on skipped batches (bf16 autocast + logit clamp + per-epoch param/buffer health check); dual persistent DataLoader pools OOM'ing 8 GB host RAM (val loads in-process); torch 2.6 `weights_only` rejecting own checkpoint on resume; checkpoint saved before best-score update (stale best on resume).
 - ✅ **Calibration fixed on real wide-camera footage** (found via SoccerNet demo clip): keypoint plausibility now checked at inlier keypoints, not extrapolated image corners (12%→80% solve rate); `findHomography` RANSAC threshold was 0.008·width ≈ 15 *metres* (destination units!) → 2.0 m (reproj 311→12 px median). SNMOT-187: 100% frames calibrated, 100% player pitch coverage, possession 67/33.
-- 📝 #3 pose (ViTPose), #4 off-screen imputation, tracking robustness (pitch-space max-speed gate landed, cross-cut re-ID next), UI/UX — documented in docs/roadmap.md
 - ✅ SoccerNet demo clips extracted (`scripts/extract_soccernet_clip.py`, kit-distinctness ranked): SNMOT-187 + SNMOT-149 in data/raw (NDA-local, never commit)
+
+## Phase 8 — Completion sprint (all remaining roadmap items landed)
+- ✅ **Ball track refinement** (`detection.ball.postprocess`): per-camera-segment outlier rejection vs rolling median + Savitzky-Golay smoothing, never across scene cuts, before interpolation. SNMOT-187: teleports 31→13, p99 step 197→116 px.
+- ✅ **Possession/pass retune for CV error** (swept on the synthetic harness, both regimes): control radius 2→3 m, hysteresis 6→4 → GT pass P/R 0.85/0.88→**0.90/0.91**, full-CV pass recall **0.14→0.40** (P 0.72). Real-clip possession normalised 90/10→63/37.
+- ✅ **Cross-cut re-ID** (`tracking.cross_cut_reid`): identities stashed at scene cuts (appearance + last pitch position), claimed back by Hungarian appearance matching with an elapsed-time pitch gate. Unit-tested restore/reject cases.
+- ✅ **#3 Pose features** (`pose.enabled`): top-down yolo11n-pose on player crops → 5 scale-free body-shape descriptors → per-track mean/std in pose.parquet → 'pose' group in style embeddings. 12/14 players on a real frame.
+- ✅ **#4 Off-screen imputation** (`pitch_control.impute_offscreen`): recently-off-screen players persist as decaying ghosts (≤4 s) for control/Voronoi; residual bias documented (limitations 8b).
+- ✅ **UI/UX**: radar motion trails + team-shape hulls + fading pass arrows (toggleable, clock-synced); first-visit tour; CSV/report downloads; kit-colour selector chips.
+- ✅ **Config plumbing fix**: `process_clip.py` and local app uploads now default to `configs/football.yaml` (the product config was previously never loaded without explicit flags — pose/imputation/tracknet entries were silently inert).
+- ✅ 87 tests green. Final full-stack run on SNMOT-187: 100% frames calibrated, 95% ball coverage, possession 63/37, separability 6.8.
 
 ## Phase 6 — Stretch
 - ✅ RT-DETR vs YOLO benchmark harness (`train_detector.py --benchmark`)

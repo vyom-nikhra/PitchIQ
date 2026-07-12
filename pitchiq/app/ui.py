@@ -125,12 +125,18 @@ def start_processing(video_bytes: bytes, filename: str) -> str:
     if UPLOAD_MAX_FRAMES:
         overrides["video"] = {"max_frames": UPLOAD_MAX_FRAMES}
 
+    # local runs get the product config (trained weights, pose, imputation —
+    # everything in it falls back gracefully); the Space stays on the lean
+    # defaults so CPU uploads finish inside the frame cap
+    product_cfg = REPO_ROOT / "configs" / "football.yaml"
+    cfg_path = product_cfg if (product_cfg.exists() and not ON_SPACE) else None
+
     def run() -> None:
         from pitchiq.pipeline.full import FullPipeline
 
         try:
-            FullPipeline(load_config(overrides=overrides)).process_video(
-                store.input_video, store)
+            FullPipeline(load_config(path=cfg_path, overrides=overrides)
+                         ).process_video(store.input_video, store)
         except Exception:
             pass  # status.json carries the error
 

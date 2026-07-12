@@ -57,10 +57,10 @@ without any keys.
 | Tab | What you get |
 |---|---|
 | 🎬 Annotated video | boxes, persistent IDs, team colours, jersey numbers, mini-radar |
-| 🗺️ Tactical map | **top-down radar frame-synced to video scrubbing** |
-| 📊 Analytics | possession flow, heatmaps, pitch control, pass networks, formations & shape morphs, xT, phases |
-| 🧠 Intelligence | discovered role per player, nominal-vs-actual mismatches, similar-player search with *why*, man/zonal marking with pairs |
-| 📝 Report | grounded analyst write-up + "ask the match" Q&A |
+| 🗺️ Tactical map | **top-down radar frame-synced to video scrubbing** — with motion trails, team-shape hulls and pass arrows, all toggleable |
+| 📊 Analytics | possession flow, heatmaps, pitch control, pass networks, formations & shape morphs, xT, phases — tracking/events downloadable as CSV |
+| 🧠 Intelligence | discovered role per player (incl. pose-informed style), nominal-vs-actual mismatches, similar-player search with *why*, man/zonal marking with pairs |
+| 📝 Report | grounded analyst write-up + "ask the match" Q&A (downloadable) |
 
 Upload a clip in the sidebar to run the full pipeline on your own footage
 (CPU: expect minutes per video-minute; see `docs/training.md` to unlock the
@@ -104,17 +104,17 @@ smoothing. Full story: [docs/calibration.md](docs/calibration.md).
 ## On real broadcast footage
 
 Synthetic ground truth proves the maths; real footage proves the system. The
-full trained stack — **YOLOv11 fine-tuned** on football (player mAP50 0.99,
-GK 0.96, referee 0.98, ball 0.63) + the **SoccerNet-trained pitch-keypoint
-model** + tracking + team clustering — was run end-to-end on a 50-second
-Champions League segment (Real Madrid vs Man City, 1024×576):
+full trained stack runs end-to-end on real broadcast clips (measured on a
+1080p SoccerNet main-camera clip and a 576p Champions League segment):
 
 | Component | Real-footage result |
 |---|---|
-| Detection | ~19 players + GK + referee + ball per frame, native classes |
-| **Calibration** | keypoint model solves the panning camera (464 keyframes + flow); on the same box-camera frames, **line-only calibration anchored just 14** |
-| Tracking | persistent IDs across the segment, projected onto a live radar |
-| Team colour | separability surfaced in metadata; **fails on this fixture** — RMA-white vs City-sky-blue are near-identical at 576p (documented) |
+| Detection | **YOLOv11 fine-tuned** on football: player mAP50 0.99, GK 0.96, referee 0.98, ball 0.63 · ~20 entities/frame with native classes |
+| **Calibration** | the **SoccerNet-trained pitch-keypoint model** anchors the panning camera (100 % of frames calibrated on the 1080p clip: 184 keypoint solves + optical-flow bridging); line-only calibration anchored a handful |
+| Ball | **TrackNet-style heatmap tracker trained on real footage**: 3 consecutive frames → ball heatmap; on clips it never saw, 52 % detection / **0 % false positives** / 0.9 px median. In-pipeline (with physics smoothing + interpolation) it covers **95 % of frames**, including airborne balls a box detector misses |
+| Team assignment | learned **crop-embedding clustering** (CNN → UMAP → K-Means): separability 6.8 on distinct kits, and it resolved the near-identical RMA-white vs City-sky-blue fixture that colour histograms lumped 13:1 |
+| Tracking | persistent IDs with a pitch-space max-speed gate (no identity teleports) and **cross-cut re-ID** — players keep their ID through replays and camera changes |
+| Style | optional top-down **pose sampling** (lean, stride, crouch…) feeds the role/similarity embeddings |
 
 The **pitch-keypoint model is the enabling piece**: on real box-camera frames
 where line/conic calibration correctly refuses (too few markings), it
@@ -122,8 +122,9 @@ localises 17–21 semantic keypoints and solves a plausible homography — turni
 a raw broadcast pan into real-pitch coordinates for the radar. Trained locally
 on a consumer GPU ([docs/training.md](docs/training.md)); it declines on the
 synthetic renderer (a different visual domain) and the pipeline falls back to
-line/conic there. Honest gaps — team colour on near-identical kits, ball
-tracking, jersey OCR at low resolution — are catalogued in
+line/conic there. Honest gaps — pass recall under CV noise, airborne-ball
+projection, off-screen players (partially imputed as decaying ghosts), jersey
+OCR at low resolution — are catalogued in
 [docs/limitations.md](docs/limitations.md).
 
 ## Repository tour
@@ -131,8 +132,9 @@ tracking, jersey OCR at low resolution — are catalogued in
 - [docs/architecture.md](docs/architecture.md) — layers, artifacts, module map
 - [docs/calibration.md](docs/calibration.md) — the crux, measured
 - [docs/limitations.md](docs/limitations.md) — the honest gap list (read this)
-- [docs/roadmap.md](docs/roadmap.md) — prioritised improvements (embedding team
-  ID, TrackNet ball tracker, pose, off-screen imputation, tracking robustness)
+- [docs/roadmap.md](docs/roadmap.md) — landed improvements (embedding team ID,
+  real-footage TrackNet ball, cross-cut re-ID, pose features, off-screen
+  ghosts) + the honest backlog
 - [docs/training.md](docs/training.md) — style encoder (CPU) · YOLO fine-tune
   (local GPU/Kaggle) · pitch keypoints (local GPU, NDA data)
 - [docs/data_sources.md](docs/data_sources.md) — licensing, SoccerNet NDA rules,
@@ -157,7 +159,8 @@ tracking, jersey OCR at low resolution — are catalogued in
 ## Tests
 
 ```bash
-python -m pytest    # 64 tests: geometry, conics, tracking, calibration,
+python -m pytest    # 87 tests: geometry, conics, tracking (incl. cross-cut
+                    # re-ID), calibration, ball training/refinement, pose,
                     # analytics, intelligence, report
 ```
 

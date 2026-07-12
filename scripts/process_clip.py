@@ -43,6 +43,9 @@ def main() -> None:
     ap.add_argument("--device", default="cpu", help="cpu | cuda")
     ap.add_argument("--imgsz", type=int, default=1280)
     ap.add_argument("--jersey", action="store_true", help="enable jersey OCR")
+    ap.add_argument("--config", default=None,
+                    help="config yaml; defaults to configs/football.yaml when "
+                         "present (the product config), else built-in defaults")
     ap.add_argument("--ball-tracknet", default=None,
                     help="TrackNet ball weights (.pt); omit for YOLO+Kalman ball")
     ap.add_argument("--teams", choices=["kmeans_lab", "embed"], default=None,
@@ -81,7 +84,13 @@ def main() -> None:
         overrides["calibration"] = {"keypoint_weights": args.keypoints}
     if args.teams:
         overrides["teams"] = {"method": args.teams}
-    cfg = load_config(overrides=overrides)
+    cfg_path = args.config
+    if cfg_path is None:
+        product = REPO / "configs" / "football.yaml"
+        cfg_path = product if product.exists() else None
+        if cfg_path:
+            log.info("using product config %s (override with --config)", cfg_path)
+    cfg = load_config(path=cfg_path, overrides=overrides)
 
     log.info("processing %s -> %s (detector=%s, keypoints=%s, device=%s)",
              video.name, job_dir, args.detector or "auto", args.keypoints or "lines",

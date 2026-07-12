@@ -120,6 +120,67 @@ class BallSelector:
         return out
 
 
+def refine_ball_track(
+    df: pd.DataFrame,
+    ball_id: int = -1,
+    cut_frames: set[int] | None = None,
+    max_frame_gap: int = 12,
+) -> pd.DataFrame:
+    """Physics-aware cleanup of the ball track: outlier rejection + smoothing.
+
+    Heatmap/detector peaks are decided per frame, so a track carries (a) rare
+    teleport outliers (a wrong peak far from the true ball) and (b) pixel
+    jitter. Per camera segment (split at scene cuts and long gaps — smoothing
+    across a cut would blend two unrelated camera views):
+
+    1. reject points far from the local rolling-median trajectory (robust to
+       the outliers themselves, unlike a mean);
+    2. Savitzky-Golay smooth the survivors (local polynomial fit — keeps
+       genuine direction changes like bounces, unlike a moving average).
+
+    Runs before gap interpolation so outliers don't get interpolated *toward*.
+    """
+    from scipy.signal import savgol_filter
+
+    ball = df[df["entity_id"] == ball_id].sort_values("frame")
+    if len(ball) < 7:
+        return df
+    others = df[df["entity_id"] != ball_id]
+    frames = ball["frame"].to_numpy()
+    cuts = cut_frames or set()
+
+    gap = np.diff(frames, prepend=frames[0])
+    seg_id = np.cumsum((gap > max_frame_gap) | np.array([int(f) in cuts for f in frames]))
+
+    keep = np.ones(len(ball), dtype=bool)
+    cols = {c: ball[c].to_numpy(dtype=float).copy()
+            for c in ("x_pixel", "y_pixel", "x_pitch", "y_pitch")}
+    for s in np.unique(seg_id):
+        idx = np.where(seg_id == s)[0]
+        if len(idx) < 5:
+            continue
+        x, y = cols["x_pixel"][idx], cols["y_pixel"][idx]
+        rx = pd.Series(x).rolling(5, center=True, min_periods=1).median().to_numpy()
+        ry = pd.Series(y).rolling(5, center=True, min_periods=1).median().to_numpy()
+        resid = np.hypot(x - rx, y - ry)
+        mad = float(np.median(resid))
+        bad = resid > max(40.0, 8.0 * mad)
+        keep[idx[bad]] = False
+        good = idx[~bad]
+        if len(good) < 7:
+            continue
+        w = min(9, (len(good) // 2) * 2 + 1)  # odd, <= n
+        for c in ("x_pixel", "y_pixel"):
+            cols[c][good] = savgol_filter(cols[c][good], w, 2)
+        for c in ("x_pitch", "y_pitch"):
+            v = cols[c][good]
+            if np.all(np.isfinite(v)):  # pitch coords can be NaN off-pitch
+                cols[c][good] = savgol_filter(v, w, 2)
+    ball = ball.assign(**cols).loc[keep]
+    return pd.concat([others, ball], ignore_index=True).sort_values(
+        ["frame", "entity_id"]).reset_index(drop=True)
+
+
 def interpolate_ball(df: pd.DataFrame, max_gap: int, ball_id: int = -1) -> pd.DataFrame:
     """Bridge missing-ball gaps in the tracking table by linear interpolation.
 

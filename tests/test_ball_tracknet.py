@@ -82,6 +82,42 @@ def test_safe_convs_block_fp16_overflow_and_keep_state_dict_keys():
     assert float(out32.abs().max()) > 30000.0
 
 
+def test_refine_ball_track_outliers_smoothing_and_cuts():
+    """Outlier peaks are dropped (not smoothed toward), jitter shrinks, and
+    smoothing never crosses a scene cut (two camera views are unrelated)."""
+    import pandas as pd
+
+    from pitchiq.perception.detection.ball import refine_ball_track
+
+    rng = np.random.default_rng(0)
+    n = 60
+    frames = np.arange(n)
+    x = 100.0 + 8.0 * frames + rng.normal(0, 2.0, n)   # linear motion + jitter
+    y = 200.0 + 2.0 * frames + rng.normal(0, 2.0, n)
+    x[30] += 500.0                                     # teleport outlier
+    # scene cut at frame 45: camera jumps, position legitimately teleports
+    x[45:] += 900.0
+    rows = [dict(frame=int(f), timestamp=f / 25, entity_id=-1,
+                 x_pixel=float(xi), y_pixel=float(yi),
+                 x_pitch=float(xi) / 10, y_pitch=float(yi) / 10, conf=0.9)
+            for f, xi, yi in zip(frames, x, y)]
+    rows.append(dict(frame=0, timestamp=0.0, entity_id=7, x_pixel=5.0,
+                     y_pixel=5.0, x_pitch=0.5, y_pitch=0.5, conf=0.9))
+    df = pd.DataFrame(rows)
+
+    out = refine_ball_track(df, ball_id=-1, cut_frames={45})
+    ball = out[out.entity_id == -1].set_index("frame")
+
+    assert 30 not in ball.index                       # outlier dropped
+    assert 7 in out.entity_id.values                  # players untouched
+    # jitter reduced on the clean stretch (compare residuals to the true line)
+    seg = ball.loc[5:25]
+    resid = seg.x_pixel - (100.0 + 8.0 * seg.index.to_numpy())
+    assert resid.abs().mean() < 2.0
+    # the cut boundary stays sharp: frame 45 is not dragged toward pre-cut
+    assert ball.loc[45, "x_pixel"] > 1200.0
+
+
 def test_training_heatmap_has_exact_peak():
     """The focal loss defines positives as target == 1.0 exactly; a Gaussian
     at a fractional centre never reaches 1.0, so the training target must

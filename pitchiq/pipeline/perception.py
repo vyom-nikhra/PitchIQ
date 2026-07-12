@@ -33,7 +33,11 @@ from pitchiq.core.types import EntityClass, Team
 from pitchiq.core.video import FrameReader
 from pitchiq.perception.calibration import PitchCalibrator
 from pitchiq.perception.detection import create_detector
-from pitchiq.perception.detection.ball import BallSelector, interpolate_ball
+from pitchiq.perception.detection.ball import (
+    BallSelector,
+    interpolate_ball,
+    refine_ball_track,
+)
 from pitchiq.perception.jersey import JerseyVoter, create_jersey_reader
 from pitchiq.perception.teams import TeamAssigner
 from pitchiq.perception.teams.assign import torso_crop
@@ -177,7 +181,8 @@ class PerceptionPipeline:
 
         if not rows:
             raise RuntimeError("perception produced no rows — is the video readable?")
-        df, meta = self._finalize(rows, cls_votes, reader)
+        cut_frames = {int(r["frame"]) for r in hrecs if r["is_scene_cut"]}
+        df, meta = self._finalize(rows, cls_votes, reader, cut_frames)
         hdf = homographies_to_frame(hrecs)
 
         store.save_tracking(df)
@@ -188,7 +193,8 @@ class PerceptionPipeline:
         return df, hdf, meta
 
     # ------------------------------------------------------------ finalize
-    def _finalize(self, rows, cls_votes, reader) -> tuple[pd.DataFrame, MatchMeta]:
+    def _finalize(self, rows, cls_votes, reader,
+                  cut_frames: set[int] | None = None) -> tuple[pd.DataFrame, MatchMeta]:
         raw = pd.DataFrame(rows)
 
         # drop fragment tracks
@@ -233,6 +239,9 @@ class PerceptionPipeline:
             }
         )
         df = validate_tracking_table(df)
+        if self.cfg.detection.ball.postprocess:
+            # outliers first, so interpolation never bridges *toward* one
+            df = refine_ball_track(df, BALL_ID, cut_frames)
         df = interpolate_ball(df, self.cfg.detection.ball.max_gap_interpolate, BALL_ID)
         df = validate_tracking_table(df)
 

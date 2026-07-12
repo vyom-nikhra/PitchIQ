@@ -12,6 +12,7 @@ detection:
     # TrackNet heatmap ball tracker (scripts/train_ball_tracker.py); falls
     # back to the YOLO+Kalman selector when the weights are absent
     tracknet_weights: weights/ball_tracknet_real.pt
+    postprocess: true   # outlier rejection + Savitzky-Golay smoothing
 
 calibration:
   method: auto

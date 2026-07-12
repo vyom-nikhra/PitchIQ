@@ -40,6 +40,7 @@ class BallConfig(BaseModel):
     max_gap_interpolate: int = 25
     tracknet_weights: Optional[str] = None  # TrackNet heatmap ball tracker (optional)
     tracknet_threshold: float = 0.5
+    postprocess: bool = True  # outlier rejection + smoothing of the ball track
 
 
 class DetectionConfig(BaseModel):

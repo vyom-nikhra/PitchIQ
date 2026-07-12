@@ -114,8 +114,12 @@ class CalibrationConfig(BaseModel):
 
 
 class PossessionConfig(BaseModel):
-    control_radius_m: float = 2.0
-    hysteresis_frames: int = 6
+    # tuned on the synthetic harness across BOTH regimes (GT tracking and the
+    # full CV pipeline): radius 3.0 / hysteresis 4 improved GT pass P/R to
+    # 0.90/0.91 AND raised full-CV pass recall 0.14 -> 0.40 (0.72 precision) —
+    # the old 2.0 m radius starved possession under real CV positional error
+    control_radius_m: float = 3.0
+    hysteresis_frames: int = 4
     dead_ball_speed_mps: float = 0.5
 
 

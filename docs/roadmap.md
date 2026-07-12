@@ -67,13 +67,15 @@ regardless.*
   teleports are refused at association time, not just masked later by the
   analytics kinematics clamp. No-op on frames without a homography.
 
+- ✅ **Cross-cut re-identification** (landed). On a scene cut every active
+  identity is stashed (appearance embedding + last pitch position through the
+  pre-cut homography); tracks born after the cut claim stashed IDs by
+  appearance cosine distance, gated by an elapsed-time-aware pitch radius
+  (`tracking.cross_cut_reid`, horizon `reid_horizon_s`). A player keeps their
+  ID through a replay or camera change; strangers and right-shirt-wrong-place
+  candidates are refused (unit-tested).
+
 ### Backlog
-- **No cross-cut re-identification** *(next up)*. On a scene cut the tracker resets and
-  assigns fresh IDs — each camera shot is tracked independently, with no
-  identity carried across the cut. Proper continuity would match post-cut
-  detections to pre-cut tracks via appearance embedding + last-known pitch
-  position (a short-horizon re-ID), so a player keeps their ID through a
-  replay or angle change.
 - Long same-kit occlusions in congestion (corners, goalmouths) still cause ID
   switches; jersey-number anchoring helps only when digits are legible.
 

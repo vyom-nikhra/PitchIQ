@@ -91,6 +91,68 @@ def test_velocity_gate_rejects_impossible_association():
     assert cost2[0, 1] < 1e4
 
 
+def _det_feat(x, y, feat, conf=0.9):
+    d = _det(x, y, conf=conf)
+    d.feature = np.asarray(feat, dtype=np.float32)
+    return d
+
+
+def _reid_setup():
+    """Tracker + homography (10 px = 1 m) with two players tracked pre-cut."""
+    from pitchiq.core.geometry import fit_homography_dlt
+
+    src = np.array([[0, 0], [1000, 0], [1000, 500], [0, 500]], float)
+    dst = np.array([[0, 0], [100, 0], [100, 50], [0, 50]], float)
+    H = fit_homography_dlt(src, dst)
+    cfg = TrackingConfig()
+    cfg.appearance.enabled = True
+    tracker = ByteTracker(cfg)
+    fa = np.array([1.0] + [0.0] * 7, np.float32)   # player A's appearance
+    fb = np.array([0.0, 1.0] + [0.0] * 6, np.float32)
+    for f in range(8):
+        tracker.update([_det_feat(100 + 2 * f, 100, fa),
+                        _det_feat(600, 300, fb)], homography=H, dt=0.04)
+    ids = {t.track_id for t in tracker.tracked}
+    return tracker, H, fa, fb, ids
+
+
+def test_cross_cut_reid_restores_identity():
+    """After a scene cut, a track with matching appearance near the last
+    pitch position must inherit the pre-cut ID."""
+    tracker, H, fa, fb, ids_before = _reid_setup()
+    id_a = next(t.track_id for t in tracker.tracked
+                if t.feature is not None and t.feature[0] > 0.9)
+
+    # cut: player A reappears at a different PIXEL location that projects to
+    # a nearby pitch point (camera angle changed, player barely moved)
+    out = []
+    for f in range(3):
+        out = tracker.update([_det_feat(150 + f, 110, fa)],
+                             homography=H, dt=0.04, scene_cut=(f == 0))
+    assert len(out) == 1
+    assert out[0].track_id == id_a  # identity restored across the cut
+
+
+def test_cross_cut_reid_rejects_stranger_and_far_player():
+    """A post-cut track with an unfamiliar appearance gets a FRESH id, and a
+    familiar appearance too far away on the pitch is also refused."""
+    tracker, H, fa, fb, ids_before = _reid_setup()
+
+    fz = np.array([0.0, 0.0, 1.0] + [0.0] * 5, np.float32)  # stranger
+    out = []
+    for f in range(3):
+        out = tracker.update([_det_feat(100, 100, fz)],
+                             homography=H, dt=0.04, scene_cut=(f == 0))
+    assert out and out[0].track_id not in ids_before
+
+    tracker2, H2, fa2, fb2, ids2 = _reid_setup()
+    out2 = []
+    for f in range(3):
+        out2 = tracker2.update([_det_feat(0, 30, fb2)],  # ~(1m, 7m): B was at (61m, 34m)
+                               homography=H2, dt=0.04, scene_cut=(f == 0))
+    assert out2 and out2[0].track_id not in ids2  # right shirt, wrong place
+
+
 def test_ball_excluded():
     tracker = ByteTracker(TrackingConfig())
     tracks = tracker.update([_det(10, 10, cls=EntityClass.BALL)])

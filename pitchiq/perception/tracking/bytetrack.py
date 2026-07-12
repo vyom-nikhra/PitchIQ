@@ -153,6 +153,8 @@ class ByteTracker:
         self.frame_id = -1
         self._H = None
         self._dt = None
+        self._prev_H = None            # last valid homography (pre-cut projection)
+        self._cut_stash: list[dict] = []  # identities awaiting cross-cut re-ID
         STrack.reset_ids()
 
     def _cost(self, tracks: list[STrack], dets: list[Detection], use_appearance: bool) -> np.ndarray:
@@ -202,9 +204,74 @@ class ByteTracker:
         cost[speed > max_v] = 1e5
         return cost
 
+    # ------------------------------------------------------ cross-cut re-ID
+    def _project_foot(self, t: STrack, H) -> np.ndarray | None:
+        if H is None:
+            return None
+        from pitchiq.core.geometry import apply_homography
+
+        x1, y1, x2, y2 = t.bbox
+        p = apply_homography(H, [[(x1 + x2) / 2.0, y2]])[0]
+        return p if np.all(np.isfinite(p)) else None
+
+    def _stash_for_reid(self) -> None:
+        """A scene cut invalidates every pixel-space state. Park all active
+        identities (appearance + last pitch position via the pre-cut
+        homography) so post-cut tracks can claim them back."""
+        for t in self.tracked + self.lost:
+            if t.track_id > 0:
+                self._cut_stash.append(dict(
+                    track=t, pitch=self._project_foot(t, self._prev_H),
+                    frame=self.frame_id))
+        self.tracked, self.lost = [], []
+
+    def _try_reid(self) -> None:
+        """Match tracks activated THIS frame against stashed identities:
+        appearance cosine distance, gated by elapsed-time-aware pitch
+        distance (a player can only have moved so far during the cutaway)."""
+        if not self._cut_stash:
+            return
+        dt = self._dt or 0.04
+        horizon_f = self.cfg.reid_horizon_s / dt
+        self._cut_stash = [s for s in self._cut_stash
+                           if self.frame_id - s["frame"] <= horizon_f]
+        fresh = [t for t in self.tracked
+                 if t.track_id > 0 and t.start_frame == self.frame_id]
+        if not self._cut_stash or not fresh:
+            return
+        cost = np.ones((len(self._cut_stash), len(fresh)), dtype=np.float32)
+        for i, s in enumerate(self._cut_stash):
+            old: STrack = s["track"]
+            elapsed_s = (self.frame_id - s["frame"]) * dt
+            for j, new in enumerate(fresh):
+                if old.feature is None or new.feature is None:
+                    continue
+                app = float((1.0 - old.feature @ new.feature) / 2.0)
+                if s["pitch"] is not None:
+                    p_new = self._project_foot(new, self._H)
+                    if p_new is not None:
+                        max_d = self.cfg.reid_base_radius_m + 5.0 * elapsed_s
+                        if float(np.linalg.norm(p_new - s["pitch"])) > max_d:
+                            continue  # too far to be the same player
+                cost[i, j] = app
+        matches, _, _ = _assign(cost, self.cfg.reid_appearance_thresh)
+        claimed = []
+        for si, fj in matches:
+            old, new = self._cut_stash[si]["track"], fresh[fj]
+            new.track_id = old.track_id
+            for c, v in old.cls_votes.items():
+                new.cls_votes[c] = new.cls_votes.get(c, 0.0) + v
+            if old.feature is not None and new.feature is not None:
+                f = 0.5 * old.feature + 0.5 * new.feature
+                new.feature = f / (np.linalg.norm(f) + 1e-9)
+            claimed.append(si)
+        self._cut_stash = [s for i, s in enumerate(self._cut_stash)
+                           if i not in claimed]
+
     def update(
         self, detections: list[Detection], camera_affine: np.ndarray | None = None,
         homography: np.ndarray | None = None, dt: float | None = None,
+        scene_cut: bool = False,
     ) -> list[STrack]:
         """Advance one frame; returns currently tracked (active) tracks.
 
@@ -220,6 +287,8 @@ class ByteTracker:
         self.frame_id += 1
         self._H = homography
         self._dt = dt
+        if scene_cut and self.cfg.cross_cut_reid:
+            self._stash_for_reid()
         dets = [d for d in detections if d.cls != EntityClass.BALL]
         high = [d for d in dets if d.conf >= self.cfg.high_thresh]
         low = [d for d in dets if self.cfg.low_thresh <= d.conf < self.cfg.high_thresh]
@@ -297,4 +366,8 @@ class ByteTracker:
 
         self.tracked = next_tracked
         self.lost = next_lost
+        if self.cfg.cross_cut_reid:
+            self._try_reid()
+        if homography is not None:
+            self._prev_H = homography
         return [t for t in self.tracked if t.track_id > 0]

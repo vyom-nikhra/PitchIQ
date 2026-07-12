@@ -114,7 +114,7 @@ class PerceptionPipeline:
 
             tracks = self.tracker.update(
                 person_dets, camera_affine=None if calib.is_scene_cut else A,
-                homography=calib.H, dt=frame_dt)
+                homography=calib.H, dt=frame_dt, scene_cut=calib.is_scene_cut)
 
             # ball: prefer the TrackNet heatmap tracker when configured, else the
             # YOLO+Kalman selector. Both yield (x_px, y_px, ground_y_px, conf).

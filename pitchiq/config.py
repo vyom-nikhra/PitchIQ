@@ -75,6 +75,13 @@ class TrackingConfig(BaseModel):
     # physically make (slightly above the ~11 m/s sprint cap to allow for
     # calibration noise); gate applies only when a homography is available
     max_assoc_speed_mps: float = 12.5
+    # cross-cut re-identification: on a scene cut identities are stashed
+    # (appearance + last pitch position) and newly-born tracks are matched
+    # back, so a player keeps their ID through a replay or camera change
+    cross_cut_reid: bool = True
+    reid_horizon_s: float = 8.0          # how long a stashed identity stays claimable
+    reid_appearance_thresh: float = 0.25  # max cosine distance to claim an ID
+    reid_base_radius_m: float = 8.0       # pitch gate at cut time; grows ~5 m/s after
 
 
 class TeamsConfig(BaseModel):

@@ -105,6 +105,11 @@ class TrackNetBall:
                  device: str = "auto", peak_threshold: float = 0.5) -> None:
         import torch
 
+        from pathlib import Path
+        if not Path(weights_path).exists():
+            # typed so callers can treat absent weights as expected-missing
+            # (graceful fallback) while any other init failure raises
+            raise FileNotFoundError(f"TrackNet weights not found: {weights_path}")
         self.torch = torch
         if device == "auto":
             device = "cuda" if torch.cuda.is_available() else "cpu"

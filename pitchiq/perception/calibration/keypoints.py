@@ -72,6 +72,11 @@ class KeypointCalibrator:
                  device: str = "auto") -> None:
         import torch
 
+        from pathlib import Path
+        if not Path(weights_path).exists():
+            # typed so callers can treat absent weights as expected-missing
+            # (graceful fallback) while any other init failure raises
+            raise FileNotFoundError(f"keypoint weights not found: {weights_path}")
         self.torch = torch
         self.pitch = pitch
         self.min_conf = min_conf

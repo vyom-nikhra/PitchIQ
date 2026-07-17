@@ -30,6 +30,23 @@ def test_tracknet_forward_shape():
     assert y.shape == (2, 1, 288, 512)
 
 
+def test_tracknet_init_error_contract(tmp_path):
+    """Missing weights raise FileNotFoundError (the pipeline's graceful-
+    fallback trigger); a corrupt file raises something else — a real error
+    that must NOT be swallowed into a silent quality downgrade."""
+    pytest.importorskip("torch")
+    from pitchiq.perception.detection.tracknet import TrackNetBall
+
+    with pytest.raises(FileNotFoundError):
+        TrackNetBall(str(tmp_path / "nope.pt"))
+
+    corrupt = tmp_path / "corrupt.pt"
+    corrupt.write_bytes(b"this is not a checkpoint")
+    with pytest.raises(Exception) as exc_info:
+        TrackNetBall(str(corrupt))
+    assert not isinstance(exc_info.value, (FileNotFoundError, ImportError))
+
+
 def test_peak_decode_subpixel():
     """The centroid decoder recovers a sub-pixel ball location from a heatmap."""
     pytest.importorskip("torch")

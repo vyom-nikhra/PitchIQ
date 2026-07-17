@@ -66,3 +66,26 @@ def test_scene_cut_detector():
     assert det(pitch_view) is False     # first frame: never a cut
     assert det(panned) is False         # same scene
     assert det(crowd) is True           # hard cut
+
+
+def test_keypoint_calibrator_init_error_contract(pitch, tmp_path):
+    """Missing weights raise FileNotFoundError (PitchCalibrator's graceful-
+    fallback trigger); a corrupt file raises something else — a genuine error
+    that must not silently downgrade to line-based calibration."""
+    pytest.importorskip("torch")
+    from pitchiq.perception.calibration.calibrator import PitchCalibrator
+    from pitchiq.perception.calibration.keypoints import KeypointCalibrator
+    from pitchiq.config import CalibrationConfig
+
+    with pytest.raises(FileNotFoundError):
+        KeypointCalibrator(pitch, str(tmp_path / "nope.pt"))
+
+    # absent weights: PitchCalibrator degrades to line-based, documented
+    cfg = CalibrationConfig(keypoint_weights=str(tmp_path / "nope.pt"))
+    assert PitchCalibrator(cfg, pitch).keypoints is None
+
+    corrupt = tmp_path / "corrupt.pt"
+    corrupt.write_bytes(b"this is not a checkpoint")
+    with pytest.raises(Exception) as exc_info:
+        PitchCalibrator(CalibrationConfig(keypoint_weights=str(corrupt)), pitch)
+    assert not isinstance(exc_info.value, (FileNotFoundError, ImportError))

@@ -54,7 +54,9 @@ class PitchCalibrator:
                 from pitchiq.perception.calibration.keypoints import KeypointCalibrator
 
                 self.keypoints = KeypointCalibrator(pitch, cfg.keypoint_weights)
-            except Exception as exc:
+            except (FileNotFoundError, ImportError) as exc:
+                # expected-missing only (no weights / no torch); a genuine
+                # init failure must raise, not silently downgrade calibration
                 log.warning("keypoint calibrator unavailable (%s); using line-based", exc)
         self._frames_since_estimate = 10**9
         self._last_error = float("nan")

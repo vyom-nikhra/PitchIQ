@@ -59,7 +59,10 @@ class PerceptionPipeline:
         self.embedder = create_embedder(cfg.tracking.appearance)
         self.tracker = ByteTracker(cfg.tracking)
         self.ball = BallSelector(cfg.detection.ball, detector=self.detector)
-        # optional TrackNet heatmap ball tracker (falls back to BallSelector)
+        # optional TrackNet heatmap ball tracker (falls back to BallSelector).
+        # Only *expected-missing* conditions (no weights file, torch not
+        # installed) degrade gracefully; a genuine init failure (corrupt
+        # checkpoint, shape bug) must raise, not silently downgrade the ball.
         self.tracknet = None
         if cfg.detection.ball.tracknet_weights:
             try:
@@ -69,7 +72,7 @@ class PerceptionPipeline:
                     cfg.detection.ball.tracknet_weights,
                     device=cfg.detection.device,
                     peak_threshold=cfg.detection.ball.tracknet_threshold)
-            except Exception as exc:
+            except (FileNotFoundError, ImportError) as exc:
                 log.warning("TrackNet unavailable (%s); using YOLO+Kalman ball", exc)
         self.calibrator = PitchCalibrator(cfg.calibration, self.pitch)
         self.camera_motion = (

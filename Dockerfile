@@ -1,6 +1,6 @@
 # PitchIQ — single-container deployment (Streamlit UI + FastAPI backend).
 # Suitable for Hugging Face Spaces (Docker SDK, port 7860) and local runs.
-FROM python:3.11-slim
+FROM python:3.13-slim
 
 # opencv-headless needs glib even without GUI bits
 RUN apt-get update && apt-get install -y --no-install-recommends \
@@ -9,13 +9,15 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 
 WORKDIR /app
 
-# CPU torch first (small wheel index), then the package with app extras
-COPY pyproject.toml README.md ./
-RUN pip install --no-cache-dir torch --index-url https://download.pytorch.org/whl/cpu
+# CPU torch first (small wheel index), then the package with app extras.
+# constraints.txt pins the exact known-good versions so an upstream release
+# can't silently break the deployed Space.
+COPY pyproject.toml README.md constraints.txt ./
+RUN pip install --no-cache-dir -c constraints.txt torch --index-url https://download.pytorch.org/whl/cpu
 COPY pitchiq ./pitchiq
 COPY configs ./configs
 COPY scripts ./scripts
-RUN pip install --no-cache-dir -e .[app,ml]
+RUN pip install --no-cache-dir -c constraints.txt -e .[app,ml]
 
 # bundled demo artifacts + (licence-clean, sim-trained) encoder weights
 COPY data/demo ./data/demo

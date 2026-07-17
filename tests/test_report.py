@@ -10,6 +10,7 @@ import pytest
 from pitchiq.config import LLMConfig, ReportConfig
 from pitchiq.core.artifacts import ArtifactStore
 from pitchiq.core.schema import MatchMeta
+from pitchiq.report import audit as audit_mod
 from pitchiq.report.facts import build_facts, flatten_facts
 from pitchiq.report.generator import build_report, template_report
 from pitchiq.report.qa import answer_question
@@ -115,6 +116,28 @@ def test_qa_retrieval_fallback(mini_store, monkeypatch):
                                ReportConfig(llm=LLMConfig(provider="none")))
     assert "don't cover" in nonsense["answer"] or nonsense["evidence"] == [] \
         or len(nonsense["evidence"]) <= 8
+
+
+def test_template_report_is_fully_grounded(mini_store):
+    """The groundedness audit proves 'every claim traces to facts.json' on
+    the deterministic path — the same tool that audits LLM reports."""
+    from pitchiq.report.audit import audit
+
+    facts = build_facts(mini_store)
+    results, share = audit(template_report(facts), facts)
+    assert len(results) >= 15  # a real report, not a trivially empty one
+    misses = [(tok, ctx) for tok, ctx, ok in results if not ok]
+    assert share == 1.0, f"ungrounded numeric claims: {misses}"
+
+
+def test_audit_catches_fabricated_numbers():
+    facts = {"possession": {"share": {"home": 0.61}}}
+    md = "Home won 61% possession and completed 999 passes."
+    results, share = audit_mod.audit(md, facts)
+    by_tok = {tok: ok for tok, _, ok in results}
+    assert by_tok["61"] is True
+    assert by_tok["999"] is False
+    assert share == 0.5
 
 
 def test_flatten_facts_roundtrip():

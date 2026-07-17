@@ -31,6 +31,11 @@ The image bakes in `data/demo/` so the dashboard is explorable immediately.
 4. Free CPU tier notes: precomputed demo matches are instant; fresh uploads
    run the full CV pipeline at CPU speed (minutes per video minute) — keep
    uploads short, or attach a GPU to the Space to lift this.
+5. The fine-tuned football detector is fetched automatically on first use
+   from the public model repo (`detection.weights_url`). The NDA-bound
+   weights (pitch keypoints, TrackNet ball) stay local-only, so Space uploads
+   use line/conic calibration and the YOLO+Kalman ball — the app's sidebar
+   states exactly which stack an upload will run.
 
 ## Secrets in production
 

@@ -40,6 +40,15 @@ mining of the false-positive frames, a 5-frame input window, higher input
 resolution, and a full-length low-LR cosine tail (both runs early-stopped
 before the schedule's fine-tuning phase).
 
+### Confidence-aware reporting  ✅  *(2026-07-17 trust sprint)*
+Perception quality (calibration coverage, observed-ball share, identity
+stability, kit separability) is graded per clip from the cached artifacts
+(`pitchiq/report/quality.py`) and propagated everywhere the system speaks:
+the LLM report hedges ball-dependent claims when quality is low, the
+dashboard shows a tracking-confidence badge, and a groundedness audit
+(`scripts/audit_report.py`) verifies every numeric report claim against
+`facts.json` (both demo reports: 100%).
+
 ## Planned (documented weaknesses)
 
 ### 3. Pose estimation for richer style embeddings
@@ -80,8 +89,7 @@ regardless.*
   switches; jersey-number anchoring helps only when digits are legible.
 
 ## UI / UX backlog
-- Cleaner match selector, per-tab loading states, downloadable report/CSV.
-- Richer radar (trails, team-shape hulls, pass arrows on the radar itself).
-- A guided "tour" of a demo match for first-time visitors.
+- ✅ Downloadable report/CSV · richer radar (trails, hulls, pass arrows) ·
+  first-visit tour · tracking-confidence badge — all landed.
 - React frontend over the existing FastAPI (the app is already thin over
   `ArtifactStore` + JSON artifacts, so the port is mechanical).

@@ -40,7 +40,9 @@ CFG = load_config()
 ON_SPACE = bool(os.environ.get("SPACE_ID"))
 _env_cap = os.environ.get("PITCHIQ_UPLOAD_MAX_FRAMES")
 UPLOAD_MAX_FRAMES = int(_env_cap) if _env_cap else (400 if ON_SPACE else None)
-HAS_TRAINED_DETECTOR = CFG.detection.weights and Path(CFG.detection.weights).exists()
+# present on disk, or fetchable on first use via detection.weights_url
+HAS_TRAINED_DETECTOR = bool(CFG.detection.weights and (
+    Path(CFG.detection.weights).exists() or CFG.detection.weights_url))
 HAS_KEYPOINTS = bool(CFG.calibration.keypoint_weights) and Path(
     CFG.calibration.keypoint_weights or "").exists()
 # Anchor data paths to the repo root, not the launch cwd: the artifact roots

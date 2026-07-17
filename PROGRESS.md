@@ -70,6 +70,16 @@ Kinematics · possession (0.647 vs 0.650 GT) · heatmaps/territory · formations
 - ✅ **Config plumbing fix**: `process_clip.py` and local app uploads now default to `configs/football.yaml` (the product config was previously never loaded without explicit flags — pose/imputation/tracknet entries were silently inert).
 - ✅ 87 tests green. Final full-stack run on SNMOT-187: 100% frames calibrated, 95% ball coverage, possession 63/37, separability 6.8.
 
+## Phase 9 — Trust & process sprint (post-council review, 2026-07-17)
+- ✅ **Confidence-aware reporting** (the council's #1 recommendation): `report/quality.py` grades calibration / observed-ball share / identity stability / kit separability from cached artifacts → `facts["data_quality"]` → the LLM prompt hedges ball-dependent claims when quality is low (was: "no hedging" unconditionally) → dashboard badge with the numbers behind it. Perception now records exact pre-interpolation `ball_observed_frames`.
+- ✅ **Report groundedness measured**: `pitchiq/report/audit.py` + `scripts/audit_report.py` verify every numeric claim in a report exists in facts.json (rounding/percent tolerant). Both bundled demo reports: **100% grounded** (43/43 and 49/49 claims). Fabricated-number case unit-tested to fail.
+- ✅ **Error discipline**: TrackNet + keypoint-calibrator init now raise typed FileNotFoundError for absent weights; the pipeline catches only expected-missing (FileNotFoundError/ImportError) — a corrupt checkpoint can no longer silently downgrade the crux components.
+- ✅ **CI + reproducible deps**: GitHub Actions (ruff + full pytest, py3.11/3.13, CPU torch); next-major caps on every dep; `constraints.txt` freeze wired into the Dockerfile (now python:3.13). Ruff actually passes now (24 pre-existing violations fixed/configured).
+- ✅ **Detector published** (owner-approved; open Roboflow CC-BY data, NOT NDA): public HF model repo + `detection.weights_url` auto-download — the public Space and fresh clones get real football detection instead of COCO fallback. Missing weights file now degrades to COCO with a warning (was: crash into blob).
+- ✅ **README overhaul**: live-demo link + CI badge + demo GIF at top, real clone URL, what-runs-where table (NDA constraint ≠ capability ceiling), plain-English error-budget sentence.
+- ⚠️ **Honest correction**: the Phase 8 claim "full-CV pass recall 0.14→0.40" does NOT reproduce on the standard seeded harness. `validate_synthetic.py` (blob variant, current retuned config, verified twice — deterministic) gives: possession agreement **43.7%** (up from 37.1% pre-retune), pass **P 0.80 / R 0.14**, MOTA 0.528, IDF1 0.249. The 0.40 figure came from the sweep's own evaluation setup; the harness numbers are the ones published in README/docs.
+- 106 tests green. Demo reports regenerated (template engine — no GEMINI key in .env at the time; rerun `ReportPipeline` on `data/demo/*` after key rotation to restore Gemini prose).
+
 ## Phase 6 — Stretch
 - ✅ RT-DETR vs YOLO benchmark harness (`train_detector.py --benchmark`)
 - ✅ Detector fine-tuned (Kaggle) · pitch-keypoint model trained (local) · style encoder + ball tracker trained

@@ -11,12 +11,22 @@ license: mit
 
 # ⚽ PitchIQ — Football Intelligence from Broadcast Video
 
-**One video clip in → research-grade tactical intelligence out.** PitchIQ
-reconstructs every player's position on a real 105×68 m pitch from ordinary
-broadcast footage, layers analyst-grade tactics on top (pressing, pitch
-control, marking schemes), then learns higher-order structure: playing roles
-discovered from behaviour, similar-player search, who-marks-whom — and writes
-the analyst report, grounded in the computed numbers.
+[![Live demo](https://img.shields.io/badge/%F0%9F%A4%97%20Live%20demo-Hugging%20Face%20Space-blue)](https://huggingface.co/spaces/NuclearPanda/PitchIQ)
+[![CI](https://github.com/vyom-nikhra/PitchIQ/actions/workflows/ci.yml/badge.svg)](https://github.com/vyom-nikhra/PitchIQ/actions/workflows/ci.yml)
+[![License: MIT](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
+
+**One video clip in → tactical intelligence out.** PitchIQ reconstructs every
+player's position on a real 105×68 m pitch from ordinary broadcast footage,
+layers analyst-grade tactics on top (pressing, pitch control, marking
+schemes), then learns higher-order structure — playing roles discovered from
+behaviour, similar-player search, who-marks-whom — and writes the analyst
+report, grounded in the computed numbers.
+
+![PitchIQ demo — annotated tracking with persistent IDs, team colours and a live mini-radar](docs/media/demo.gif)
+
+*The bundled demo match: every box, ID, team colour and radar dot computed by
+the pipeline. Try it live — **[the demo Space](https://huggingface.co/spaces/NuclearPanda/PitchIQ)**
+lands on this match with all five tabs ready.*
 
 ```
 ┌───────────────────────────────────────────────────────────────────┐
@@ -39,7 +49,7 @@ the analyst report, grounded in the computed numbers.
 ## Quickstart
 
 ```bash
-git clone <repo> && cd pitchiq
+git clone https://github.com/vyom-nikhra/PitchIQ.git && cd PitchIQ
 python -m venv .venv && .venv/Scripts/activate     # (or source .venv/bin/activate)
 pip install -e .[app,ml]
 pip install torch --index-url https://download.pytorch.org/whl/cpu
@@ -50,7 +60,9 @@ streamlit run pitchiq/app/ui.py     # → http://localhost:8501
 
 or just: `docker compose up --build`. Add `GEMINI_API_KEY` to `.env`
 (template: `.env.example`) for LLM reports & Q&A — everything else works
-without any keys.
+without any keys. The fine-tuned football detector
+([public model repo](https://huggingface.co/NuclearPanda/pitchiq-football-yolo11n))
+downloads automatically on first use.
 
 ## The dashboard
 
@@ -62,24 +74,40 @@ without any keys.
 | 🧠 Intelligence | discovered role per player (incl. pose-informed style), nominal-vs-actual mismatches, similar-player search with *why*, man/zonal marking with pairs |
 | 📝 Report | grounded analyst write-up + "ask the match" Q&A (downloadable) |
 
-Upload a clip in the sidebar to run the full pipeline on your own footage
-(CPU: expect minutes per video-minute; see `docs/training.md` to unlock the
-GPU detector).
+Every match header also shows a **tracking-confidence badge** (high / medium /
+low) with the perception-quality numbers behind it — see the next section.
+
+## The system knows what it doesn't know
+
+Computer vision on broadcast footage is imperfect, so PitchIQ measures its own
+perception quality per clip and **propagates that uncertainty into everything
+it says**:
+
+- `data_quality` in the fact base grades calibration coverage, observed-ball
+  share, identity stability and kit separability from the cached artifacts;
+- the **report hedges when the data is thin** — "possession roughly 60/40 —
+  low confidence, ball observed in only 41% of frames" — instead of laundering
+  perception noise into confident prose (and stays crisp when quality is high);
+- the dashboard badge shows the same assessment, with every number visible;
+- a **groundedness audit** (`scripts/audit_report.py`) verifies that every
+  numeric claim in a generated report exists in `facts.json` — both bundled
+  demo reports audit **100% grounded**, and the check runs in the test suite.
 
 ## Validated, not vibes
 
 The repo bundles a **synthetic ground-truth harness**: an agent-based match
 simulator (formations, pressing profiles, man/zonal marking with known
-assignments) plus a broadcast renderer with a true 3D camera. This lets us
-score two distinct things against exact truth.
+assignments) plus a broadcast renderer with a true 3D camera. This separates
+two questions most projects blur together — and the split matters, because
+they get very different answers:
 
-**(a) The analytics *maths*, on ground-truth tracking** — does the Layer-2/3
-logic recover what the simulator scripted?
+**(a) Is the analytics *maths* right?** — Layer-2/3 logic scored on
+ground-truth tracking:
 
 | What | Result vs ground truth |
 |---|---|
 | Possession share | 0.647 vs 0.650 true |
-| Pass detection | recall 0.93 |
+| Pass detection | precision 0.90 / recall 0.91 |
 | Formations | exact recovery (incl. in/out-of-possession morphs) |
 | Who-marks-whom | **10/10 pairs** recovered |
 | Man vs zonal separation | 0.81 (man) vs 0.67 (press-heavy zonal) |
@@ -87,19 +115,38 @@ logic recover what the simulator scripted?
 **(b) Calibration accuracy** (the crux): 0.25 m mean on direct estimates,
 0.72 m median across all frames including flow-bridged ones.
 
-**(c) The *full CV pipeline* end-to-end** — detection → tracking →
-calibration → analytics run on the rendered video, no ground-truth shortcuts
-(`scripts/validate_synthetic.py` → [docs/validation.md](docs/validation.md)).
-This is deliberately sobering and honest: calibration holds (0.32 m median),
-but CV noise (imperfect detection, ball tracking) degrades downstream event
-metrics (possession frame-agreement ~0.37, pass recall ~0.17). The gap
-between (a) and (c) *is* the perception error budget, shown rather than hidden.
+**(c) What does CV noise cost end-to-end?** — the *full CV pipeline*
+(detection → tracking → calibration → analytics) run on the rendered video
+with no ground-truth shortcuts (`scripts/validate_synthetic.py`, deterministic
+seeded clip → [docs/validation.md](docs/validation.md)): calibration holds
+(0.32 m median), possession frame-agreement 44%, pass recall 0.14 at 0.80
+precision.
+
+**The plain-English version: 44% is the cost of imperfect vision, not broken
+math — the same analytics score 0.65-vs-0.65 possession on clean tracking.**
+The gap between (a) and (c) *is* the perception error budget, shown rather
+than hidden — and the tracking-confidence badge above puts that same honesty
+into the product itself, per clip.
 
 The calibration method is the interesting part: line-family hypothesis search
 + **projective conic constructions** (circle tangency points, penalty-arc
 pole/polar) that break the centre-view degeneracy, bidirectional mask
 scoring, degeneracy gates, chamfer refinement, and flow-bridged temporal
 smoothing. Full story: [docs/calibration.md](docs/calibration.md).
+
+## What runs where (and why)
+
+| Stack component | Local (full) | Public Space | Why the difference |
+|---|---|---|---|
+| Detector | fine-tuned YOLOv11 | **same** — auto-downloaded from the [public model repo](https://huggingface.co/NuclearPanda/pitchiq-football-yolo11n) | trained on open data (CC-BY) → publishable |
+| Pitch calibration | learned keypoint model | line/conic only | keypoint model is SoccerNet-trained → **NDA, never redistributed** |
+| Ball | TrackNet heatmap tracker | YOLO+Kalman+ROI | TrackNet weights are SoccerNet-trained → NDA |
+| Compute | your GPU | free CPU tier (uploads frame-capped) | deployment cost |
+
+The public demo's *pre-baked* showcase match runs the full pipeline; live
+uploads on the Space run the reduced stack above — a **deployment and legal
+constraint, not the system's ceiling**. The app says exactly which stack
+produced what.
 
 ## On real broadcast footage
 
@@ -131,10 +178,11 @@ OCR at low resolution — are catalogued in
 
 - [docs/architecture.md](docs/architecture.md) — layers, artifacts, module map
 - [docs/calibration.md](docs/calibration.md) — the crux, measured
+- [docs/validation.md](docs/validation.md) — the full-CV error budget, regenerated per run
 - [docs/limitations.md](docs/limitations.md) — the honest gap list (read this)
 - [docs/roadmap.md](docs/roadmap.md) — landed improvements (embedding team ID,
   real-footage TrackNet ball, cross-cut re-ID, pose features, off-screen
-  ghosts) + the honest backlog
+  ghosts, confidence-aware reporting) + the honest backlog
 - [docs/training.md](docs/training.md) — style encoder (CPU) · YOLO fine-tune
   (local GPU/Kaggle) · pitch keypoints (local GPU, NDA data)
 - [docs/data_sources.md](docs/data_sources.md) — licensing, SoccerNet NDA rules,
@@ -149,24 +197,31 @@ OCR at low resolution — are catalogued in
 2. **Every component swaps behind config** (detector, calibrator, embedder,
    similarity index, LLM provider) and **degrades gracefully** — the
    end-to-end path survives missing GPUs, keys, or optional deps, and the
-   chosen fallback is always recorded in the artifacts.
+   chosen fallback is always recorded in the artifacts. Expected-missing
+   degrades; genuine failures raise.
 3. **Grounded generation**: the report/Q&A LLM narrates `facts.json` and
-   nothing else; a metrics appendix makes every claim auditable, and a
+   nothing else; the groundedness audit *measures* that promise, and a
    deterministic template stands in when no key is configured.
 4. **Honesty as a feature**: known-hard problems (ball, box-only views,
-   congestion) are mitigated, measured, and documented rather than hidden.
+   congestion) are mitigated, measured, and documented — and the running
+   system reports its own per-clip confidence rather than pretending.
 
 ## Tests
 
 ```bash
-python -m pytest    # 87 tests: geometry, conics, tracking (incl. cross-cut
+python -m pytest    # 106 tests: geometry, conics, tracking (incl. cross-cut
                     # re-ID), calibration, ball training/refinement, pose,
-                    # analytics, intelligence, report
+                    # analytics, intelligence, report, perception-quality
+                    # grading, report-groundedness audit
 ```
+
+CI runs the full suite + ruff on Python 3.11 and 3.13;
+`constraints.txt` pins the exact deployed dependency set.
 
 ## Licence
 
 MIT for all code and the synthetic demo data. External datasets keep their
-own terms — notably SoccerNet (NDA; never redistributed here). Built with
-Ultralytics, OpenCV, SciPy, NetworkX, scikit-learn, FAISS, PyTorch, Plotly,
-FastAPI, Streamlit.
+own terms — notably SoccerNet (NDA; never redistributed here). The published
+detector weights are AGPL-3.0 (Ultralytics derivative, trained on CC-BY open
+data). Built with Ultralytics, OpenCV, SciPy, NetworkX, scikit-learn, FAISS,
+PyTorch, Plotly, FastAPI, Streamlit.

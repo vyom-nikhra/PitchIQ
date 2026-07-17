@@ -98,7 +98,6 @@ def test_kinematics_constant_velocity():
 def test_kinematics_sprint_detection():
     rows = []
     for f in range(200):
-        speed = 8.0 if 80 <= f < 120 else 2.0
         x = 5 + sum(8.0 / FPS if 80 <= i < 120 else 2.0 / FPS for i in range(f))
         rows.append(_row(f, 1, "player", "home", min(x, 100), 30.0))
         rows.append(_row(f, -1, "ball", "none", 50, 34))

@@ -30,10 +30,19 @@ Hard rules:
 4. If the data says the match is synthetic (match.is_synthetic), add one short \
 italic note at the top saying this is a simulated demonstration match.
 5. Where the data is thin or a metric is missing, say so rather than guessing.
-6. Write in confident, concrete analyst prose — no hedging filler, no bullet spam.
+6. Calibrate your confidence to data_quality. When data_quality.overall is \
+"high", write confident, concrete analyst prose — no hedging filler. When it is \
+"medium" or "low", every ball-dependent claim (possession, passes, xT, PPDA, \
+pressing) must carry a brief hedge quoting the relevant coverage number from \
+data_quality (e.g. "possession roughly 60/40 — low confidence, ball observed in \
+only 41% of frames"). Never present a low-confidence number as settled fact.
+7. No bullet spam.
 
 Structure (markdown, ## headings):
-## Executive Summary — 3-4 sentences: who controlled what, and how.
+## Executive Summary — 3-4 sentences: who controlled what, and how. End with \
+one Data Confidence sentence stating data_quality.overall and the single \
+biggest caveat from data_quality.notes (or that positions are ground-truth \
+exact, if so).
 ## Tactical Narrative — possession/territory/tilt, formations and in/out-of-\
 possession shape morphs, pressing (PPDA, press height) and how the teams' \
 approaches interacted. This is the core section.
@@ -67,7 +76,7 @@ def _finalise(body: str, facts: dict) -> str:
 
 def _metrics_appendix(facts: dict) -> str:
     keep = ["possession", "field_tilt", "ppda", "pitch_control", "team_distance_m",
-            "line_breaking", "events"]
+            "line_breaking", "events", "data_quality"]
     lines = ["## Metrics Appendix", "",
              "Auto-generated from `facts.json`; every figure above traces here.", ""]
     for k in keep:
@@ -97,6 +106,12 @@ def template_report(facts: dict) -> str:
         + (f", field tilt {tilt:.2f} in favour of {h if tilt and tilt > 0.5 else a}"
            if tilt is not None else "") + "). "
         + _ppda_sentence(ppda, h, a))
+    dq = facts.get("data_quality", {})
+    if dq:
+        conf_sentence = f"Data confidence: **{dq.get('overall', '?')}**."
+        if dq.get("notes"):
+            conf_sentence += f" {dq['notes'][0]}"
+        parts.append(conf_sentence)
     parts.append("")
 
     # tactical narrative
@@ -168,6 +183,8 @@ def template_report(facts: dict) -> str:
                      f"{mm['discovered']}.")
     parts.append("- Events (passes/turnovers) are derived from tracking, not a manual "
                  "event feed; ball-dependent metrics inherit ball-tracking noise.")
+    for note in facts.get("data_quality", {}).get("notes", []):
+        parts.append(f"- {note}")
     if facts.get("match", {}).get("is_synthetic"):
         parts.append("- Synthetic match: player behaviour is simulator-generated.")
     return "\n".join(parts) + "\n"

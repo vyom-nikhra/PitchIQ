@@ -59,8 +59,6 @@ def main() -> None:
     cm = CameraMotionEstimator()
 
     df = store.load_tracking()
-    boxes_by_frame = {f: g[["x_pixel", "y_pixel"]].to_numpy()
-                      for f, g in df.dropna(subset=["x_pixel"]).groupby("frame")}
 
     print("re-estimating homographies...")
     t0 = time.time()

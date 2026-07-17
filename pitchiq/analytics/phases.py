@@ -18,7 +18,7 @@ import pandas as pd
 
 from pitchiq.config import PhasesConfig
 from pitchiq.core.schema import MatchMeta
-from pitchiq.analytics.common import attack_sign_series, ball_series, to_attacking_x
+from pitchiq.analytics.common import ball_series
 
 
 def segment_phases(df: pd.DataFrame, possession: pd.DataFrame, meta: MatchMeta,

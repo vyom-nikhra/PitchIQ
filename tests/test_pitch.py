@@ -1,6 +1,6 @@
 import numpy as np
 
-from pitchiq.core.pitch import Pitch, to_attacking_coords
+from pitchiq.core.pitch import to_attacking_coords
 
 
 def test_keypoints_complete_and_on_pitch(pitch):

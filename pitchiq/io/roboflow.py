@@ -8,7 +8,6 @@ referee. ``download_dataset`` pulls it in YOLOv11 format ready for
 
 from __future__ import annotations
 
-import os
 from pathlib import Path
 
 from pitchiq.io.errors import DatasetUnavailable

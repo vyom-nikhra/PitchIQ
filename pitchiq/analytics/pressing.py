@@ -101,7 +101,6 @@ def pressing_summary(press: pd.DataFrame, events: pd.DataFrame, meta: MatchMeta,
     out = {}
     for team in ("home", "away"):
         tp = press[press.presser_team == team] if len(press) else pd.DataFrame()
-        opp = "away" if team == "home" else "home"
         entry: dict = {
             "pressures": int(len(tp)),
             "pressures_per_min": round(len(tp) / minutes, 2) if minutes else 0,

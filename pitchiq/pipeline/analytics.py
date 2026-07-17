@@ -18,7 +18,6 @@ import logging
 from typing import Callable
 
 import numpy as np
-import pandas as pd
 
 from pitchiq.analytics import (
     events as events_mod,
@@ -36,7 +35,6 @@ from pitchiq.analytics import (
 from pitchiq.analytics.common import (
     ball_series,
     jersey_of_entities,
-    minutes_played,
     team_of_entities,
 )
 from pitchiq.config import Config

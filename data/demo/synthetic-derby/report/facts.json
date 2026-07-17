@@ -286,6 +286,22 @@
     "home": 5664.0,
     "away": 4820.0
   },
+  "data_quality": {
+    "overall": "high",
+    "is_cv": false,
+    "levels": {
+      "calibration": "high",
+      "ball": "high",
+      "tracking": "high",
+      "teams": "high"
+    },
+    "components": {
+      "source": "synthetic-simulator"
+    },
+    "notes": [
+      "Positions come from ground truth (simulator or data provider), not from computer vision \u2014 treat the numbers as exact."
+    ]
+  },
   "physical": {
     "top_distance_per_min": [
       {

@@ -26,6 +26,7 @@ import streamlit.components.v1 as components
 from pitchiq.config import load_config
 from pitchiq.core.artifacts import ArtifactStore
 from pitchiq.core.env import load_env
+from pitchiq.report.quality import assess_quality
 
 load_env()
 st.set_page_config(page_title="PitchIQ", page_icon="⚽", layout="wide")
@@ -103,6 +104,9 @@ def load_store_bundle(job_dir: str):
     b["heatmaps"] = dict(np.load(hm_path)) if hm_path.exists() else {}
     pc_path = store.analytics_path("pitch_control.npz")
     b["pitch_control"] = dict(np.load(pc_path)) if pc_path.exists() else {}
+    hdf = (pd.read_parquet(store.homography_path)
+           if store.homography_path.exists() else None)
+    b["quality"] = assess_quality(b["tracking"], hdf, b["meta"])
     return b
 
 
@@ -264,6 +268,30 @@ c3.metric("Passes detected", summary.get("events", {}).get("n_passes", 0))
 ppda = summary.get("ppda", {})
 c4.metric("PPDA h / a", f"{ppda.get('home', {}).get('ppda', '—')} / "
                         f"{ppda.get('away', {}).get('ppda', '—')}")
+
+# perception-quality badge: the system says out loud how much to trust itself
+_q = bundle["quality"]
+_qcol = {"high": "#21a366", "medium": "#e08c26", "low": "#d64545"}.get(
+    _q["overall"], "#888")
+st.markdown(
+    f'<span style="background:{_qcol};color:white;padding:2px 12px;'
+    f'border-radius:12px;font-size:0.85em;font-weight:600">'
+    f'Tracking confidence: {_q["overall"].upper()}</span>',
+    unsafe_allow_html=True)
+with st.expander("Why this confidence?"):
+    if not _q.get("is_cv"):
+        st.markdown(_q["notes"][0])
+    else:
+        st.markdown(" · ".join(f"**{k}**: {v}"
+                               for k, v in _q["levels"].items()))
+        st.dataframe(
+            pd.DataFrame([{"signal": k, "value": str(v)}
+                          for k, v in _q["components"].items()]),
+            hide_index=True, use_container_width=True, height=240)
+        for _n in _q["notes"]:
+            st.markdown(f"- {_n}")
+        st.caption("Same numbers the analyst report uses to calibrate its "
+                   "hedging — low confidence means the report says so.")
 
 tab_video, tab_radar, tab_analytics, tab_intel, tab_report = st.tabs(
     ["🎬 Annotated video", "🗺️ Tactical map", "📊 Analytics", "🧠 Intelligence",

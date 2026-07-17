@@ -1,7 +1,6 @@
 """Pose descriptor + sampler tests (pure maths — no model download)."""
 
 import numpy as np
-import pytest
 
 from pitchiq.perception.pose import PoseSampler, pose_descriptor
 

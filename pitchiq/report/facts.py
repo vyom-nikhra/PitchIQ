@@ -8,9 +8,9 @@ metric, and so Q&A retrieval works without re-running analytics.
 
 from __future__ import annotations
 
-import pandas as pd
 
 from pitchiq.core.artifacts import ArtifactStore
+from pitchiq.report.quality import assess_quality_from_store
 
 
 def _player_label(eid: int | str, players: dict, team_names: dict) -> str:
@@ -58,6 +58,9 @@ def build_facts(store: ArtifactStore) -> dict:
         "line_breaking": summary.get("line_breaking", {}),
         "phases": summary.get("phases", {}),
         "team_distance_m": summary.get("team_distance_m", {}),
+        # perception-quality assessment: lets the report (and Q&A) calibrate
+        # its confidence to how trustworthy the tracking actually is
+        "data_quality": assess_quality_from_store(store),
     }
 
     # top movers / speedsters with labels (team players only — referees are

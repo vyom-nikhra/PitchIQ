@@ -5,10 +5,9 @@ with keys absent so CI is deterministic.
 """
 
 import numpy as np
-import pandas as pd
 import pytest
 
-from pitchiq.config import LLMConfig, ReportConfig, load_config
+from pitchiq.config import LLMConfig, ReportConfig
 from pitchiq.core.artifacts import ArtifactStore
 from pitchiq.core.schema import MatchMeta
 from pitchiq.report.facts import build_facts, flatten_facts
@@ -62,6 +61,9 @@ def test_build_facts_labels_and_filters(mini_store):
     # referee (team none) excluded from physical facts
     assert not any("200" in l for l in labels)
     assert facts["expected_threat"]["top_players"][0]["xt_created"] == 0.05
+    # perception-quality assessment always rides along (ground-truth here)
+    assert facts["data_quality"]["overall"] == "high"
+    assert facts["data_quality"]["is_cv"] is False
 
 
 def test_template_report_contains_grounded_numbers(mini_store):
@@ -72,6 +74,18 @@ def test_template_report_contains_grounded_numbers(mini_store):
     assert "PPDA 6.0" in md
     assert "#7 (Reds)" in md
     assert "Simulated demonstration" in md
+    assert "Data confidence: **high**" in md
+
+
+def test_template_report_surfaces_low_confidence():
+    facts = {"match": {"teams": {"home": "H", "away": "A"}},
+             "possession": {"share": {"home": 0.6}},
+             "data_quality": {"overall": "low", "is_cv": True,
+                              "notes": ["The ball was directly observed in "
+                                        "only 12% of frames."]}}
+    md = template_report(facts)
+    assert "Data confidence: **low**" in md
+    assert "12% of frames" in md  # note appears in exec summary and watch-outs
 
 
 def test_build_report_falls_back_without_keys(mini_store, monkeypatch):

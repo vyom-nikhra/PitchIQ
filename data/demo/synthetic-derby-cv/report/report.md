@@ -1,51 +1,36 @@
-## Executive Summary
+# Match Report — Crimson City vs Azure United
 
-In this short 4.0-minute match, the Away team dominated possession with an 80.95% share, utilizing a patient buildup strategy that averaged 6.46 seconds per spell. Despite this massive possession advantage, the Home team effectively choked the Away team's progression, maintaining a high field tilt of 0.714 and forcing the ball deep into the Away team's half. The Home team relied on an aggressive, high-pressing defensive posture to disrupt the Away team's possession, limiting the Away team's ability to convert their dominance of the ball into meaningful final-third penetration.
+## Executive Summary
+Azure United controlled the ball (81% possession, field tilt 0.71 in favour of Crimson City). The more aggressive press came from Crimson City (PPDA 0.2 vs 0.2).
+Data confidence: **medium**. Only ~9 players visible per frame (broadcast framing) — team-shape and pitch-control metrics describe the visible players.
 
 ## Tactical Narrative
-
-The tactical battle was defined by a stark contrast in styles: the Away team's slow, possession-oriented buildup against the Home team's aggressive, high-pressing defensive block. 
-
-The Away team set up in a 3-4-3 formation in possession, which morphed into a 4-5-1 out of possession. Their possession was characterized by lateral and backward circulation, spending 48.7% of their possession phase in their own third with a mean ball x-coordinate of 44.3 meters. This conservative approach is reflected in their average possession spell of 6.46 seconds, with their longest spell lasting 24.0 seconds. 
-
-Conversely, the Home team operated in a 3-5-2 in possession, which morphed into a 4-3-3 out of possession. When they did win the ball, they looked to strike immediately, spending 49.2% of their in-possession time in transition attacks. This directness resulted in shorter possession spells, averaging 4.14 seconds with a maximum duration of 13.6 seconds. Despite having only 19.05% of the ball, the Home team pinned the Away team back, securing a 54.5% share of the final third and a high defensive line height of 60.2 meters in possession.
-
-```
-Home (High Line / Pressing)          Away (Mid Block / Buildup)
-   [3-5-2 In / 4-3-3 Out]              [3-4-3 In / 4-5-1 Out]
-   
-     Press Height: 66.1m                 Def Line Height: 30.3m
-     PPDA: 0.2                           PPDA: 0.25
-     High Press Share: 71.1%             Low Block Share: 50.1%
-```
-
-The Home team's defensive posture was highly aggressive. They spent 71.1% of their defending time in a high press, registering 24 pressures (6.0 per minute) with a mean press height of 66.1 meters. Their PPDA of 0.2 (calculated from 5 opponent buildup passes and 25 defensive actions) highlights their intensity. This pressure forced 13 total turnovers in the match, yielding a press-to-turnover rate of 20.8% for the Home team. 
-
-The Away team defended in a mid-block that dropped into a low block for 50.1% of their defending posture. Their defensive line height out of possession was 30.3 meters, and they pressed much lower, with a mean press height of 26.2 meters and a high press share of just 10.5%. However, when they did press, they were highly efficient, achieving a press-to-turnover rate of 42.1% from 19 pressures (4.75 per minute). The Away team also executed two counter-attacks, gaining 25.3 meters in 6.96 seconds (3.64 m/s) at frame 989, and 26.5 meters in 7.6 seconds (3.49 m/s) at frame 1007.
+**Crimson City** set up in a 3-5-2 with the ball (width 30.9 m) and a 4-3-3 without it — 3-5-2 in possession → 4-3-3 out of possession.
+Off the ball they defended in a high line (defensive line 55.3 m from goal, depth 19.7 m).
+**Azure United** set up in a 3-4-3 with the ball (width 38.8 m) and a 4-5-1 without it — 3-4-3 in possession → 4-5-1 out of possession.
+Off the ball they defended in a mid block (defensive line 30.3 m from goal, depth 23.5 m).
+Crimson City registered 24 pressures (6.0/min), average press height 66.1 m, converting 21% into turnovers within 3 s.
+Azure United registered 19 pressures (4.75/min), average press height 26.2 m, converting 42% into turnovers within 3 s.
 
 ## Key Players
-
-*   **player 50 (Away)**: The primary spark in the Away team's attack, generating the highest expected threat (xT) of 0.028 from 1 offensive move.
-*   **player 243 (Away)**: Supported the attack from deep or wide areas, creating 0.01 xT from 1 move.
-*   **player 25 (Away)**: Served as the central hub of the Away team's possession. He was identified as the most central player in their passing network and initiated the team's top passing combination, a 1-pass link with **player 62 (Away)**.
-*   **player 148 (Home)** & **player 154 (Home)**: Crucial defensive anchors in the Home team's hybrid marking scheme, both maintaining perfect 1.0 marking shares against their respective targets.
+- player 50 (Azure United) created the most threat (xT +0.028 over 1 moves).
+- player 243 (Azure United) created the most threat (xT +0.010 over 1 moves).
+- player 96 (Azure United) created the most threat (xT +0.001 over 1 moves).
+- player 25 (Azure United) was Azure United's passing hub (highest betweenness centrality).
 
 ## Defensive Schemes
-
-The Home team utilized a hybrid marking scheme with a man-marking score of 0.532. They maintained a high defensive line (55.3 meters out of possession) to compress the space in midfield. Key marking assignments included:
-*   **player 148 (Home)** tightly marking **player 146 (Away)** (1.0 share)
-*   **player 154 (Home)** tightly marking **player 171 (Away)** (1.0 share)
-*   **player 107 (Home)** tracking **player 166 (Away)** (0.833 share)
-*   **player 140 (Home)** tracking **player 149 (Away)** (0.8 share)
-
-The Away team defended in a zonal scheme with a lower man-marking score of 0.438, operating out of a mid-block. Their only notable individual marking pair was **player 701 (Away)** tracking **player 696 (Home)** with a 0.8 share.
+**Crimson City**: hybrid (man-score 0.532).
+  - player 148 (Crimson City) marked player 146 (Azure United) (100% of defensive samples).
+  - player 154 (Crimson City) marked player 171 (Azure United) (100% of defensive samples).
+  - player 107 (Crimson City) marked player 166 (Azure United) (83% of defensive samples).
+  - player 140 (Crimson City) marked player 149 (Azure United) (80% of defensive samples).
+**Azure United**: zonal (man-score 0.438).
+  - player 701 (Azure United) marked player 696 (Crimson City) (80% of defensive samples).
 
 ## Watch-outs & Data Notes
-
-Coaches should note several structural and data limitations from this tracking sequence:
-*   **Extremely Low Sample Size**: The match duration was only 4.0 minutes, resulting in highly compressed metrics. Only 8 total passes were attempted (6 completed), and only 1 carry was recorded. 
-*   **Missing Physical and Role Data**: The tracking system did not capture any physical metrics (top speed or distance per minute) or player role/positional classifications.
-*   **Formation Instability**: Both teams exhibited low formation stability. The Away team's out-of-possession stability was 0.33, while the Home team's out-of-possession stability was a very low 0.2. This indicates rapid transitions and constant shape-shifting, which may point to defensive disorganization or tracking noise during transitions.
+- Events (passes/turnovers) are derived from tracking, not a manual event feed; ball-dependent metrics inherit ball-tracking noise.
+- Only ~9 players visible per frame (broadcast framing) — team-shape and pitch-control metrics describe the visible players.
+- Detection ran on the fallback stack (blob-fallback) — the trained football detector was not available for this run.
 
 ## Metrics Appendix
 
@@ -58,3 +43,4 @@ Auto-generated from `facts.json`; every figure above traces here.
 - **team_distance_m**: `{"home": 2344.0, "away": 3468.0}`
 - **line_breaking**: `{"total": 0, "by_team": {}}`
 - **events**: `{"n_passes": 8, "n_completed_passes": 6, "n_turnovers": 13, "n_carries": 1}`
+- **data_quality**: `{"overall": "medium", "is_cv": true, "levels": {"calibration": "high", "ball": "high", "tracking": "medium", "teams": "medium"}, "components": {"calibration_coverage": 1.0, "calibration_reproj_px_median": 0.9, "calibration_method_mix": {"flow": 4819, "lines": 1181}, "ball_frame_coverage": 1.0, "ball_observed_share": 0.965, "ball_observed_is_estimated": true, "ball_conf_median": 0.5, "players_per_frame_median": 9.0, "n_player_tracks": 550, "track_len_s_median": 2.0, "team_separability": 2.05, "de`

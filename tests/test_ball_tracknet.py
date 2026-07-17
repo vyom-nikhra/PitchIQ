@@ -32,7 +32,7 @@ def test_tracknet_forward_shape():
 
 def test_peak_decode_subpixel():
     """The centroid decoder recovers a sub-pixel ball location from a heatmap."""
-    torch = pytest.importorskip("torch")
+    pytest.importorskip("torch")
     from pitchiq.perception.detection.tracknet import TrackNetBall
 
     # build an instance without loading weights, then exercise _peak directly
@@ -171,7 +171,7 @@ def test_focal_loss_finite_at_fp16_confidence():
 
 def test_ball_window_dataset_end_to_end(tmp_path):
     """Windows listed from a fake MOT sequence produce correct tensors."""
-    torch = pytest.importorskip("torch")
+    pytest.importorskip("torch")
     cv2 = pytest.importorskip("cv2")
     from pitchiq.perception.detection.ball_dataset import (
         BallWindowDataset,

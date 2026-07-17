@@ -257,6 +257,8 @@ class PerceptionPipeline:
         if self.cfg.detection.ball.postprocess:
             # outliers first, so interpolation never bridges *toward* one
             df = refine_ball_track(df, BALL_ID, cut_frames)
+        # exact observed-ball count (pre-interpolation) for the quality report
+        ball_observed = int(df.loc[df["entity_id"] == BALL_ID, "frame"].nunique())
         df = interpolate_ball(df, self.cfg.detection.ball.max_gap_interpolate, BALL_ID)
         df = validate_tracking_table(df)
 
@@ -277,6 +279,7 @@ class PerceptionPipeline:
             extras={
                 "team_separability": assignment.separability,
                 "notes": assignment.notes,
+                "ball_observed_frames": ball_observed,
             },
         )
         return df, meta

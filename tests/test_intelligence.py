@@ -2,7 +2,6 @@
 
 import numpy as np
 import pandas as pd
-import pytest
 
 from pitchiq.config import EmbeddingsConfig, MarkingConfig, RolesConfig, SimilarityConfig
 from pitchiq.intelligence.embeddings import compute_handcrafted

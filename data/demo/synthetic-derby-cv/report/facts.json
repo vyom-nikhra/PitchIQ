@@ -1,8 +1,8 @@
 {
   "match": {
     "teams": {
-      "home": "Home",
-      "away": "Away"
+      "home": "Crimson City",
+      "away": "Azure United"
     },
     "duration_min": 4.0,
     "source": "video:input.mp4|detector:blob-fallback",
@@ -324,6 +324,37 @@
     "home": 2344.0,
     "away": 3468.0
   },
+  "data_quality": {
+    "overall": "medium",
+    "is_cv": true,
+    "levels": {
+      "calibration": "high",
+      "ball": "high",
+      "tracking": "medium",
+      "teams": "medium"
+    },
+    "components": {
+      "calibration_coverage": 1.0,
+      "calibration_reproj_px_median": 0.9,
+      "calibration_method_mix": {
+        "flow": 4819,
+        "lines": 1181
+      },
+      "ball_frame_coverage": 1.0,
+      "ball_observed_share": 0.965,
+      "ball_observed_is_estimated": true,
+      "ball_conf_median": 0.5,
+      "players_per_frame_median": 9.0,
+      "n_player_tracks": 550,
+      "track_len_s_median": 2.0,
+      "team_separability": 2.05,
+      "detector": "blob-fallback"
+    },
+    "notes": [
+      "Only ~9 players visible per frame (broadcast framing) \u2014 team-shape and pitch-control metrics describe the visible players.",
+      "Detection ran on the fallback stack (blob-fallback) \u2014 the trained football detector was not available for this run."
+    ]
+  },
   "physical": {
     "top_distance_per_min": [],
     "top_speed": []
@@ -331,32 +362,32 @@
   "expected_threat": {
     "top_players": [
       {
-        "player": "player 50 (Away)",
+        "player": "player 50 (Azure United)",
         "xt_created": 0.028,
         "n_moves": 1
       },
       {
-        "player": "player 243 (Away)",
+        "player": "player 243 (Azure United)",
         "xt_created": 0.01,
         "n_moves": 1
       },
       {
-        "player": "player 96 (Away)",
+        "player": "player 96 (Azure United)",
         "xt_created": 0.001,
         "n_moves": 1
       },
       {
-        "player": "player 153 (Away)",
+        "player": "player 153 (Azure United)",
         "xt_created": 0.0008,
         "n_moves": 1
       },
       {
-        "player": "player 604 (Away)",
+        "player": "player 604 (Azure United)",
         "xt_created": 0.0006,
         "n_moves": 1
       },
       {
-        "player": "player 25 (Away)",
+        "player": "player 25 (Azure United)",
         "xt_created": 0.0,
         "n_moves": 1
       }
@@ -373,8 +404,8 @@
     "away": {
       "n_passes": 6,
       "density": 0.045,
-      "most_central_player": "player 25 (Away)",
-      "top_combination": "player 25 (Away) \u2192 player 62 (Away) (1 passes)"
+      "most_central_player": "player 25 (Azure United)",
+      "top_combination": "player 25 (Azure United) \u2192 player 62 (Azure United) (1 passes)"
     }
   },
   "roles": {
@@ -389,33 +420,33 @@
       "man_score": 0.532,
       "pairs": [
         {
-          "defender": "player 148 (Home)",
-          "marks": "player 146 (Away)",
+          "defender": "player 148 (Crimson City)",
+          "marks": "player 146 (Azure United)",
           "share": 1.0
         },
         {
-          "defender": "player 154 (Home)",
-          "marks": "player 171 (Away)",
+          "defender": "player 154 (Crimson City)",
+          "marks": "player 171 (Azure United)",
           "share": 1.0
         },
         {
-          "defender": "player 107 (Home)",
-          "marks": "player 166 (Away)",
+          "defender": "player 107 (Crimson City)",
+          "marks": "player 166 (Azure United)",
           "share": 0.833
         },
         {
-          "defender": "player 140 (Home)",
-          "marks": "player 149 (Away)",
+          "defender": "player 140 (Crimson City)",
+          "marks": "player 149 (Azure United)",
           "share": 0.8
         },
         {
-          "defender": "player 676 (Home)",
-          "marks": "player 650 (Away)",
+          "defender": "player 676 (Crimson City)",
+          "marks": "player 650 (Azure United)",
           "share": 0.75
         },
         {
-          "defender": "player 159 (Home)",
-          "marks": "player 172 (Away)",
+          "defender": "player 159 (Crimson City)",
+          "marks": "player 172 (Azure United)",
           "share": 0.714
         }
       ]
@@ -425,8 +456,8 @@
       "man_score": 0.438,
       "pairs": [
         {
-          "defender": "player 701 (Away)",
-          "marks": "player 696 (Home)",
+          "defender": "player 701 (Azure United)",
+          "marks": "player 696 (Crimson City)",
           "share": 0.8
         }
       ]

@@ -116,7 +116,6 @@ class KeypointCalibrator:
         with the line calibrator. Out-of-consensus frames return None so the
         caller falls back to lines/flow instead of trusting garbage.
         """
-        from pitchiq.perception.calibration.estimate import plausible_homography
 
         h0, w0 = frame_bgr.shape[:2]
         kps = {n: v for n, v in self.detect_keypoints(frame_bgr).items()

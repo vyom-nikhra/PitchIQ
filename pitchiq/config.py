@@ -46,6 +46,7 @@ class BallConfig(BaseModel):
 class DetectionConfig(BaseModel):
     backend: Literal["auto", "yolo", "rtdetr", "blob"] = "auto"
     weights: Optional[str] = None
+    weights_url: Optional[str] = None  # fetched to `weights` when the file is absent
     model: str = "yolo11n.pt"
     conf_threshold: float = 0.30
     imgsz: int = 1280

@@ -12,7 +12,10 @@ video:
 
 detection:
   backend: auto           # auto | yolo | rtdetr | blob
-  weights: null           # path to football fine-tuned weights (players/GK/ref/ball)
+  weights: weights/football_yolo11n.pt   # football fine-tuned (players/GK/ref/ball)
+  # fetched to `weights` on first use when the file is absent (public model,
+  # trained on open Roboflow data — NOT NDA); offline -> COCO fallback
+  weights_url: https://huggingface.co/NuclearPanda/pitchiq-football-yolo11n/resolve/main/football_yolo11n.pt
   model: yolo11n.pt       # base model when no fine-tuned weights are given
   conf_threshold: 0.30
   imgsz: 1280

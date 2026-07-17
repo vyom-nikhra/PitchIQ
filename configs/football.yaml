@@ -5,7 +5,9 @@
 
 detection:
   backend: yolo
-  weights: runs/detector/football/weights/best.pt   # scripts/train_detector.py
+  weights: weights/football_yolo11n.pt   # scripts/train_detector.py output
+  # public model repo (open Roboflow training data — NOT NDA); auto-fetched
+  weights_url: https://huggingface.co/NuclearPanda/pitchiq-football-yolo11n/resolve/main/football_yolo11n.pt
   conf_threshold: 0.3
   imgsz: 1280
   ball:

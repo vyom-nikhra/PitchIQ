@@ -12,6 +12,7 @@ Roboflow football dataset.
 from __future__ import annotations
 
 import logging
+from pathlib import Path
 
 import numpy as np
 
@@ -20,6 +21,45 @@ from pitchiq.core.types import Detection, EntityClass
 from pitchiq.perception.detection.base import Detector
 
 log = logging.getLogger(__name__)
+
+
+def download_weights(url: str, dest: str | Path, timeout: int = 60) -> None:
+    """Stream ``url`` to ``dest`` (via a .part temp file so a failed download
+    never leaves a corrupt weights file behind). Raises OSError on failure."""
+    import urllib.request
+
+    dest = Path(dest)
+    dest.parent.mkdir(parents=True, exist_ok=True)
+    part = dest.with_suffix(dest.suffix + ".part")
+    log.info("downloading detector weights: %s -> %s", url, dest)
+    with urllib.request.urlopen(url, timeout=timeout) as resp, open(part, "wb") as fh:
+        while chunk := resp.read(1 << 20):
+            fh.write(chunk)
+    part.replace(dest)
+    log.info("detector weights ready (%.1f MB)", dest.stat().st_size / 1e6)
+
+
+def resolve_weights(cfg: DetectionConfig) -> str | None:
+    """The fine-tuned weights path if usable, else None (COCO fallback).
+
+    A configured-but-absent file tries ``weights_url`` first; if that fails
+    (offline, URL gone) the detector degrades to the COCO base model with a
+    warning — the documented no-weights behaviour — instead of erroring all
+    the way down to the blob detector.
+    """
+    if cfg.weights is None:
+        return None
+    if Path(cfg.weights).exists():
+        return cfg.weights
+    if cfg.weights_url:
+        try:
+            download_weights(cfg.weights_url, cfg.weights)
+            return cfg.weights
+        except OSError as exc:
+            log.warning("detector weights download failed (%s)", exc)
+    log.warning("configured detector weights missing: %s — using the COCO base "
+                "model instead", cfg.weights)
+    return None
 
 # model class-name -> PitchIQ entity class (matched case-insensitively, substring)
 NAME_MAP = {
@@ -45,7 +85,7 @@ class UltralyticsDetector(Detector):
         from ultralytics import RTDETR, YOLO  # heavy import kept local
 
         self.cfg = cfg
-        weights = cfg.weights
+        weights = resolve_weights(cfg)
         if weights is None:
             if not cfg.coco_fallback:
                 raise RuntimeError("no football weights configured and coco_fallback disabled")
